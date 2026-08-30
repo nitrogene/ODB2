@@ -43,6 +43,13 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
   * *Bloc Logique & Antenne (à droite) :* Module ESP32 avec son antenne orientée vers le bord extérieur libre.
 * **Contour de carte (Board Outline) :** Défini et tracé sur la couche dédiée.
 
+### Schéma
+
+![Schéma ODB2 Scanner](./images/schematic.png)
+
+### PCB
+
+![PCB ODB2 Scanner](./images/pcb.png)
 ---
 
 ## 4. Feuille de Route & Checklist (TODO)
