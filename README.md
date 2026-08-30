@@ -105,3 +105,71 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
 
 * `ODB2-Scanner.eprj2` : Projet natif EasyEDA Pro v2 (contenant le schéma `P1` et le circuit imprimé `PCB1`).
 * `README.md` : Documentation technique complète et suivi du projet.
+
+---
+
+## 6. Automatisation IA via Serveur MCP (EasyEDA Pro)
+
+Pour permettre à un assistant IA (**Antigravity**, Claude Desktop, etc.) de manipuler directement le schéma et le PCB en temps réel (routage autonome des pistes, placement, création des zones de cuivre, etc.), le projet peut être piloté via le serveur MCP open-source [EasyEDA_MCP](https://github.com/Atmel2005/EasyEDA_MCP).
+
+### 6.1 Principe de Fonctionnement
+* **Extension EasyEDA Pro (`easyeda_plugin.eext`) :** Injecte un client WebSocket dans l'éditeur EasyEDA Pro qui se connecte sur `ws://127.0.0.1:8787`.
+* **Serveur MCP Python (`easyeda_mcp.py`) :** Fournit les outils MCP standards (`stdio`) à l'IA et relaie les commandes vers EasyEDA Pro.
+* **Outil Principal `execute_js` :** Permet à l'IA d'exécuter du JavaScript asynchrone interagissant avec plus de 670 commandes internes de l'API EasyEDA Pro (`eda.pcb_...`, `eda.sch_...`).
+
+```
++---------------+              stdio             +--------------------+
+|  Assistant IA | <============================> |  easyeda_mcp.py    |
+| (Antigravity) |                                | (Serveur MCP stdio)|
++---------------+                                +--------------------+
+                                                           ^
+                                             WebSocket     | (Port 8787)
+                                                           v
+                                                 +--------------------+
+                                                 | Extension EasyEDA  |
+                                                 | (Éditeur Pro / CAD)|
+                                                 +--------------------+
+```
+
+### 6.2 Prérequis & Installation
+
+1. **Cloner ou télécharger le dépôt MCP :**
+   ```bash
+   git clone https://github.com/Atmel2005/EasyEDA_MCP.git
+   ```
+
+2. **Installer les dépendances Python (Python 3.10+) :**
+   ```bash
+   pip install mcp websockets
+   ```
+
+3. **Installer l'extension dans EasyEDA Pro :**
+   * Ouvrir EasyEDA Pro (version Desktop ou Web : `https://pro.easyeda.com/editor`).
+   * Aller dans le menu **Extensions** > **Gestionnaire d'extensions** (*Extension Manager*).
+   * Cliquer sur **Charger une extension** (*Load Extension*) et sélectionner le fichier `easyeda_plugin.eext` (ou l'archive `easyeda_plugin.zip`).
+   * Activer l'extension.
+
+### 6.3 Configuration du Client IA (Antigravity / Claude)
+
+Ajouter la configuration suivante dans le fichier de configuration MCP de votre client IA (par exemple `mcp_config.json` ou la configuration des serveurs MCP) :
+
+```json
+{
+  "mcpServers": {
+    "easyeda_pro": {
+      "command": "python",
+      "args": [
+        "C:/chemin/vers/EasyEDA_MCP/easyeda_mcp.py"
+      ]
+    }
+  }
+}
+```
+
+### 6.4 Utilisation Interactive
+1. Démarrer le client IA avec le serveur MCP configuré.
+2. Ouvrir le projet `ODB2-Scanner.eprj2` dans EasyEDA Pro. Le plugin affiche un message de connexion confirmée (`[INFO] ATM_MCP WebSocket connected`).
+3. Demander à l'assistant d'exécuter des actions précises :
+   * *"Récupère la liste des composants du projet via `get_components`."*
+   * *"Trace automatiquement les pistes UART entre U3, R2/R3 et l'ESP32."*
+   * *"Déploie un plan de masse GND Top et Bottom en évitant l'antenne méandre de l'ESP32."*
