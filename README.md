@@ -45,11 +45,11 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
 
 ### Schéma
 
-![Schéma ODB2 Scanner](./images/schematic.png)
+![Schéma ODB2 Scanner](./images/Schematic.png)
 
 ### PCB
 
-![PCB ODB2 Scanner](./images/pcb.png)
+![PCB ODB2 Scanner](./images/PCB.png)
 ---
 
 ## 4. Feuille de Route & Checklist (TODO)
