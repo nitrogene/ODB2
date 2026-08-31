@@ -115,68 +115,118 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
 
 ---
 
-## 6. Automatisation IA via Serveur MCP (EasyEDA Pro)
+## 6. Automatisation IA via EasyEDA Pro
 
-Pour permettre à un assistant IA (**Antigravity**, Claude Desktop, etc.) de manipuler directement le schéma et le PCB en temps réel (routage autonome des pistes, placement, création des zones de cuivre, etc.), le projet peut être piloté via le serveur MCP open-source [EasyEDA_MCP](https://github.com/Atmel2005/EasyEDA_MCP).
+Pour permettre à un assistant IA (Claude Code, Codex, Antigravity, OpenCode...) de manipuler directement le schéma et le PCB en temps réel (routage autonome des pistes, placement, création des zones de cuivre, etc.), ce projet s'appuie sur le **skill officiel EasyEDA** : [easyeda/easyeda-api-skill](https://github.com/easyeda/easyeda-api-skill), maintenu par l'éditeur lui-même.
 
-### 6.1 Principe de Fonctionnement
-* **Extension EasyEDA Pro (`easyeda_plugin.eext`) :** Injecte un client WebSocket dans l'éditeur EasyEDA Pro qui se connecte sur `ws://127.0.0.1:8787`.
-* **Serveur MCP Python (`easyeda_mcp.py`) :** Fournit les outils MCP standards (`stdio`) à l'IA et relaie les commandes vers EasyEDA Pro.
-* **Outil Principal `execute_js` :** Permet à l'IA d'exécuter du JavaScript asynchrone interagissant avec plus de 670 commandes internes de l'API EasyEDA Pro (`eda.pcb_...`, `eda.sch_...`).
+### 6.1 Architecture
+
+Le principe repose sur un **pont local** qui fait le lien entre l'IA et l'API interne d'EasyEDA, laquelle n'existe que dans le contexte JavaScript de l'onglet navigateur :
 
 ```
-+---------------+              stdio             +--------------------+
-|  Assistant IA | <============================> |  easyeda_mcp.py    |
-| (Antigravity) |                                | (Serveur MCP stdio)|
-+---------------+                                +--------------------+
-                                                           ^
-                                             WebSocket     | (Port 8787)
-                                                           v
-                                                 +--------------------+
-                                                 | Extension EasyEDA  |
-                                                 | (Éditeur Pro / CAD)|
-                                                 +--------------------+
+IA (Claude Code / Copilot CLI / Antigravity / Codex)
+        │  Agent Skill (SKILL.md) + API HTTP/WebSocket
+        ▼
+Serveur Node.js (pont local)  ─────  tourne sur le PC, port auto 49620-49629
+        │  WebSocket (localhost)
+        ▼
+Extension .eext (run-api-gateway) ──  JavaScript, injectée dans l'onglet
+        │  appel direct                     navigateur EasyEDA Pro
+        ▼
+API interne EasyEDA (eda.pcb_..., eda.sch_..., eda.dmt_...)
 ```
 
-### 6.2 Prérequis & Installation
+Deux briques distinctes, deux cycles de vie :
+- Le **serveur Node.js** est relancé à chaque session (par le client IA ou manuellement).
+- L'**extension `.eext`** est importée **une seule fois** dans EasyEDA Pro (Extensions → Extension Manager → Import Extension) et reste active tant qu'elle n'est pas désinstallée.
 
-1. **Cloner ou télécharger le dépôt MCP :**
-   ```bash
-   git clone https://github.com/Atmel2005/EasyEDA_MCP.git
-   ```
+### 6.2 Installation
 
-2. **Installer les dépendances Python (Python 3.10+) :**
-   ```bash
-   pip install mcp websockets
-   ```
-
-3. **Installer l'extension dans EasyEDA Pro :**
-   * Ouvrir EasyEDA Pro (version Desktop ou Web : `https://pro.easyeda.com/editor`).
-   * Aller dans le menu **Extensions** > **Gestionnaire d'extensions** (*Extension Manager*).
-   * Cliquer sur **Charger une extension** (*Load Extension*) et sélectionner le fichier `easyeda_plugin.eext` (ou l'archive `easyeda_plugin.zip`).
-   * Activer l'extension.
-
-### 6.3 Configuration du Client IA (Antigravity / Claude)
-
-Ajouter la configuration suivante dans le fichier de configuration MCP de votre client IA (par exemple `mcp_config.json` ou la configuration des serveurs MCP) :
-
-```json
-{
-  "mcpServers": {
-    "easyeda_pro": {
-      "command": "python",
-      "args": [
-        "C:/chemin/vers/EasyEDA_MCP/easyeda_mcp.py"
-      ]
-    }
-  }
-}
+```bash
+git clone https://github.com/easyeda/easyeda-api-skill
+cd easyeda-api-skill
+npm install
+npm run build:docs   # génère la documentation API structurée dans docs/
+npm run server       # démarre le pont WebSocket/HTTP (port auto 49620-49629)
 ```
 
-### 6.4 Utilisation Interactive
-1. Démarrer le client IA avec le serveur MCP configuré.
-2. Ouvrir le projet `ODB2-Scanner.eprj2` dans EasyEDA Pro. Le plugin affiche un message de connexion confirmée (`[INFO] ATM_MCP WebSocket connected`).
-3. Demander à l'assistant d'exécuter des actions précises :
-   * *"Récupère la liste des composants du projet via `get_components`."*
-   * *"Trace automatiquement les pistes UART entre U3, R2/R3 et l'ESP32."*
-   * *"Déploie un plan de masse GND Top et Bottom en évitant l'antenne méandre de l'ESP32."*
+### 6.3 Installation de l'extension EasyEDA
+
+1. Télécharger `run-api-gateway.eext` depuis <https://jlc-ext.com/item/oshwhub/run-api-gateway>.
+2. Dans EasyEDA Pro : **Settings → Extensions → Extension Manager → Import Extension**.
+3. Sélectionner le fichier téléchargé et vérifier que **"Allow External Interaction"** reste activé.
+4. Ouvrir `ODB2-Scanner.eprj2` : l'extension se connecte automatiquement au serveur en scannant la plage de ports et en validant le handshake (`service: "easyeda-bridge"`).
+
+### 6.4 Connexion depuis le client IA
+
+Aucune configuration `mcp_config.json` n'est nécessaire. Les outils compatibles **Agent Skills** (Claude Code, OpenCode, QwenCode...) lisent automatiquement `SKILL.md` à la racine du dépôt cloné et disposent alors des instructions et de la documentation API.
+
+Pour un appel manuel ou un test (le port exact est affiché au démarrage du serveur, ex. `49620`) :
+
+```bash
+# Vérifier la connexion à EasyEDA
+curl http://localhost:49620/health
+
+# Exécuter du code EasyEDA à distance
+curl -X POST http://localhost:49620/execute \
+  -H "Content-Type: application/json" \
+  -d '{"code": "return await eda.dmt_Project.getCurrentProjectInfo();"}'
+```
+
+### 6.5 Modules API pertinents pour ce projet
+
+| Préfixe | Domaine | Classes clés utiles au routage de l'`ODB2-Scanner` |
+|---|---|---|
+| `PCB_` | PCB & Footprint | `PrimitiveLine` (pistes), `PrimitiveVia` (vias), `PrimitivePour` (plans de masse), `PrimitivePad`, `Drc` (vérification des règles), `Net`, `Layer` |
+| `DMT_` | Gestion de document | `Project`, `Pcb`, `Board`, `EditorControl` |
+| `SCH_` | Schématique | `PrimitiveComponent`, `PrimitiveWire` |
+| `EPCB_` / `ESCH_` | Énumérations | `LayerId`, `PrimitiveType`, `PadType` |
+
+Exemple de tracé de piste, tiré de la documentation du skill (unités en mil) :
+
+```javascript
+// Créer une piste cuivre sur la couche Top pour le net GND
+await eda.pcb_PrimitiveLine.create(
+  "GND",              // nom du net
+  EPCB_LayerId.TOP,   // couche (énum, pas un nombre brut)
+  0, 0,               // startX, startY
+  100, 0              // endX, endY
+);
+```
+
+Pour déplacer un élément existant (via, composant), le pattern asynchrone recommandé par le skill est :
+
+```javascript
+const prim = await eda.pcb_PrimitiveVia.get([viaId]);
+const asyncPrim = prim.toAsync();
+asyncPrim.setState_X(newX);
+asyncPrim.setState_Y(newY);
+asyncPrim.done();
+```
+
+### 6.6 Exemples de requêtes pour ce projet
+
+* *"Liste les pads de U3 (L9637D013TR) et de l'ESP32 (U1), puis trace la piste UART_RX entre la broche 1 de U3 et la broche 4 de U1 en passant par R2."*
+* *"Trace la paire différentielle CAN (CANH/CANL) entre U2 et le connecteur OBD-II en pistes parallèles de même longueur."*
+* *"Crée le plan de masse GND sur Top et Bottom Layer avec un dégagement de 0.254 mm, en respectant la zone d'exclusion sous l'antenne de l'ESP32."*
+* *"Lance une vérification DRC et liste les erreurs restantes."*
+
+### 6.7 Dépannage
+
+| Symptôme | Cause probable | Solution |
+|---|---|---|
+| `Port 49620-49629 already in use` | Une autre instance du serveur tourne déjà | Fermer l'instance existante avant de relancer |
+| `EasyEDA is not connected` / outil indisponible | L'extension `.eext` n'est pas active dans l'onglet EasyEDA Pro | Vérifier que le projet est ouvert avec l'extension chargée et activée |
+| Timeout sur une requête `/execute` | Onglet EasyEDA Pro inactif, ou opération trop longue | Garder l'onglet actif ; relancer la requête |
+
+> Si tu retombes sur une erreur du type `AttributeError: 'Server' object has no attribute 'list_tools'` ou `JSON-RPC error -32022: the initialize handshake is not accepted`, c'est un résidu de l'ancienne approche par serveur MCP custom (§ historique 6) — ces erreurs viennent d'incompatibilités de version du SDK Python `mcp` et ne concernent pas le skill officiel décrit ici, qui ne dépend pas de `mcp` du tout.
+
+### 6.8 Bonnes pratiques pour un routage PCB piloté par IA
+
+En cohérence avec la checklist de routage de la Section 4 de ce document :
+
+- **Ne pas s'appuyer sur l'auto-routeur intégré d'EasyEDA pour un résultat final** : la documentation officielle d'EasyEDA le déconseille elle-même *("Auto router is not good enough! Suggest routing manually!")*. Un agent IA doit raisonner piste par piste, pas déclencher l'auto-routeur en aveugle.
+- **Toujours relire les positions réelles des pads avant de router** (`pcb_PrimitivePad.get(...)`) plutôt que de faire router l'IA sur des coordonnées supposées — c'est la méthode qui a fait ses preuves dans les retours d'expérience communautaires sur ce skill.
+- **Vérifier le DRC après chaque lot de pistes tracées** (`pcb_Drc`), pas seulement à la fin du projet, pour détecter les courts-circuits ou chevauchements au plus tôt.
+- **Sauvegarder ou versionner le fichier `.eprj2`** avant toute session de routage automatisé en masse — un script IA mal formulé peut modifier plusieurs pistes en une seule commande `execute`.
+- **Router en dernier les rails de puissance** (12V, 5V, 3.3V — voir §4.1) avec des largeurs de piste explicitement spécifiées à l'agent, les erreurs de largeur de piste sur ces rails étant plus difficiles à repérer visuellement qu'un DRC de court-circuit.
