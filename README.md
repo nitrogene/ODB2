@@ -14,7 +14,7 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
 * **Alimentation robuste & sécurisée :**
   * Alimentation directe depuis le 12V batterie de la prise diagnostic.
   * Protection contre les surtensions, inversions de polarité et surintensités (fusible réarmable PPTC `F1`, diode TVS `D1`, MOSFETs de protection `Q1`/`Q2`).
-  * Double étage de conversion : abaisseur à découpage performant 12V $\rightarrow$ 5V (`U4` / `L1`) suivi d'un régulateur linéaire ultra-propre 3.3V (`U5` / `FB1`) pour l'ESP32 et la logique.
+  * Double étage de conversion : abaisseur à découpage performant 12V → 5V (`U4` / `L1`) suivi d'un régulateur linéaire ultra-propre 3.3V (`U5` / `FB1`) pour l'ESP32 et la logique.
 
 ---
 
@@ -27,10 +27,10 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
 | **Microcontrôleur & RF** | `U1` (ESP32-S3-WROOM-1-N16R8) | SMD Module | MCU Wi-Fi/BLE double cœur Xtensa LX7 (16MB Flash, 8MB PSRAM), antenne PCB intégrée. |
 | **Transceiver K-Line** | `U3` (L9637D013TR) | SOIC-8 | Émetteur-récepteur ISO 9141/KWP2000 avec protection thermique et court-circuit. |
 | **Transceiver CAN** | `U2` (TJA1051T/3/1J) | SOIC-8 | Transceiver CAN haute vitesse avec broche d'adaptation de niveau `VIO` (3.3V). |
-| **Régulateur Buck (12V $\rightarrow$ 5V)** | `U4` (TPS54331DR) | SOIC-8 | Convertisseur step-down synchrone 3.5V-28V, 3A. |
-| **Régulateur LDO (5V $\rightarrow$ 3.3V)** | `U5` (LDL1117S33R) | SOT-223-4 | LDO 3.3V 1.2A à faible chute de tension et fort réjection de bruit (PSRR). |
-| **Amortissement UART** | `R2`, `R3` ($10\,\Omega$) | 0805 | Résistances série d'amortissement sur les lignes `UART_RX` et `UART_TX` vers l'ESP32. |
-| **Terminaison CAN** | `R11` ($120\,\Omega$) | 0805 | Résistance de terminaison de ligne du bus différentiel CAN. |
+| **Régulateur Buck (12V → 5V)** | `U4` (TPS54331DR) | SOIC-8 | Convertisseur step-down synchrone 3.5V-28V, 3A. |
+| **Régulateur LDO (5V → 3.3V)** | `U5` (LDL1117S33R) | SOT-223-4 | LDO 3.3V 1.2A à faible chute de tension et fort réjection de bruit (PSRR). |
+| **Amortissement UART** | `R2`, `R3` (10 Ω) | 0805 | Résistances série d'amortissement sur les lignes `UART_RX` et `UART_TX` vers l'ESP32. |
+| **Terminaison CAN** | `R11` (120 Ω) | 0805 | Résistance de terminaison de ligne du bus différentiel CAN. |
 | **Protection ESD USB** | `U7`, `U8` (SD05C) | SOD-323 | Diodes de protection ESD bidirectionnelles sur les lignes USB D+/D-. |
 | **Protection Surtension 12V** | `D1` (SMBJ24A) | SMB | Diode TVS 24V d'écrêtage des transitoires automobiles. |
 | **Roue libre Buck** | `D2` (SS34) | SMA | Diode Schottky 40V 3A pour le découpage de `U4`. |
@@ -48,7 +48,7 @@ Inventaire extrait directement du fichier PCB actif (`PCB1`) via l'API EasyEDA P
 | **C2** | 100nF | CL10B104KB8NNNC | `C0603` | Découplage alimentation ESP32 (rail 3.3V) |
 | **C3** | 100nF | CL10B104KB8NNNC | `C0603` | Découplage alimentation transceiver CAN `U2` |
 | **C4** | 100nF | CL10B104KB8NNNC | `C0603` | Découplage alimentation transceiver K-Line `U3` |
-| **C5** | 1uF | CL10A105KA8NNNC | `C0603` | Bootstrap convertisseur Buck `U4` (broches BOOT $\rightarrow$ PH) |
+| **C5** | 1uF | CL10A105KA8NNNC | `C0603` | Bootstrap convertisseur Buck `U4` (broches BOOT → PH) |
 | **C6** | 1uF | CL10A105KA8NNNC | `C0603` | Filtrage sortie régulateur LDO `U5` (rail 3.3V) |
 | **C7** | 22uF | TCC1206X5R226K250HT | `C1206` | Condensateur réservoir entrée Buck `U4` (rail 12V VIN) |
 | **C8** | 22uF | TCC1206X5R226K250HT | `C1206` | Condensateur filtrage sortie Buck `U4` (rail 5V VOUT) |
@@ -72,8 +72,8 @@ Inventaire extrait directement du fichier PCB actif (`PCB1`) via l'API EasyEDA P
 | **U1** | 2.4GHz | ESP32-S3-WROOM-1-N16R8 | `WIRELM-SMD_ESP32-S3-WROOM-1` | SoC ESP32-S3 Wi-Fi 2.4 GHz + BLE 5.0 (16MB Flash / 8MB PSRAM) |
 | **U2** | *—* | TJA1051T/3/1J | `SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL` | Transceiver CAN haute vitesse avec broche VIO (3.3V) |
 | **U3** | *—* | E-L9637D013TR | `SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL` | Transceiver K-Line ISO 9141 / KWP2000 |
-| **U4** | *—* | TPS54331DR | `SOIC-8_L5.0-W4.0-P1.27-LS6.0-BL` | Régulateur abaisseur Step-Down Buck 12V $\rightarrow$ 5V, 3A |
-| **U5** | *—* | LDL1117S33R | `SOT-223-4_L6.5-W3.5-P2.30-LS7.0-BR` | Régulateur linéaire LDO 5V $\rightarrow$ 3.3V faible bruit, 1.2A |
+| **U4** | *—* | TPS54331DR | `SOIC-8_L5.0-W4.0-P1.27-LS6.0-BL` | Régulateur abaisseur Step-Down Buck 12V → 5V, 3A |
+| **U5** | *—* | LDL1117S33R | `SOT-223-4_L6.5-W3.5-P2.30-LS7.0-BR` | Régulateur linéaire LDO 5V → 3.3V faible bruit, 1.2A |
 | **U7** | *—* | SD05C_C53238084 | `SOD-323_L1.7-W1.3-LS2.5-BI` | Diode ESD bidirectionnelle protection ligne USB D+ |
 | **U8** | *—* | SD05C_C53238084 | `SOD-323_L1.7-W1.3-LS2.5-BI` | Diode ESD bidirectionnelle protection ligne USB D- |
 | **VBUS_5V**| *—* | Test-Point | `Test-Point-0.5mm` | Point de test pad cuivre pour le rail 5V USB |
@@ -101,44 +101,44 @@ Inventaire extrait directement du fichier PCB actif (`PCB1`) via l'API EasyEDA P
 ## 4. Feuille de Route & Checklist (TODO)
 
 ### 4.1 Routage des Pistes d'Alimentation
-- [ ] **Rail +12V et Protection :**
-  - [ ] Piste large ($0.8\text{ mm}$ à $1.0\text{ mm}$) reliant la broche 16 OBD $\rightarrow$ Fusible `F1` $\rightarrow$ Diode TVS `D1` $\rightarrow$ MOSFETs `Q1`/`Q2`.
-  - [ ] Piste $12\text{V}$ vers la broche 7 (`VS`) de `U3` ($0.5\text{ mm}$).
-- [ ] **Étage Buck 12V $\rightarrow$ 5V (`TPS54331DR` / `U4`) :**
-  - [ ] Boucle de commutation courte et large : `U4` (broche 8 PH), inductance `L1` ($10\,\mu\text{H}$) et diode Schottky `D2` (`SS34`).
-  - [ ] Condensateur d'entrée `C7` ($22\,\mu\text{F}$) au plus près de la broche 2 (`VIN`) de `U4`.
-  - [ ] Condensateur de sortie `C8` ($22\,\mu\text{F}$) juste après `L1`.
-  - [ ] Condensateur de bootstrap `C5` ($1\,\mu\text{F}$) entre broche 1 (`BOOT`) et broche 8 (`PH`).
+- [x] **Rail +12V et Protection :** *(Routage réalisé via l'API EasyEDA Pro)*
+  - [x] Piste large (0.8 mm à 1.0 mm) reliant la broche 16 OBD → Fusible `F1` → Diode TVS `D1` → MOSFETs `Q1`/`Q2`. *(Pistes de puissance de 35 mil / ~0.89 mm tracées sur Top Layer, reliant l'entrée F1(1) à D1(1), F1(2) vers Q1(2) et polarisation R10/R6)*
+  - [x] Piste 12V vers la broche 7 (`VS`) de `U3` (0.5 mm). *(Piste 20 mil / ~0.50 mm routée via Bottom Layer et 2 vias de 24/12 mil pour franchir l'étage de découpage central)*
+- [ ] **Étage Buck 12V → 5V (`TPS54331DR` / `U4`) :**
+  - [ ] Boucle de commutation courte et large : `U4` (broche 8 PH), inductance `L1` (10 µH) et diode Schottky `D2` (`SS34`).
+  - [ ] Condensateur d'entrée `C7` (22 µF) au plus près de la broche 2 (`VIN`) de `U4`.
+  - [ ] Condensateur de sortie `C8` (22 µF) juste après `L1`.
+  - [ ] Condensateur de bootstrap `C5` (1 µF) entre broche 1 (`BOOT`) et broche 8 (`PH`).
 - [ ] **Étage Régulation 3.3V (`LDL1117S33R` / `U5`) :**
-  - [ ] Entrée `VIN` reliée au $5\text{V}$ (`L1` / `C8`).
-  - [ ] Sortie `VOUT` vers perle de ferrite `FB1` et condensateur de filtrage `C6` ($1\,\mu\text{F}$).
-  - [ ] Distribution du rail $3.3\text{V}$ vers le réseau de découplage `C1` à `C4` ($100\text{ nF}$) puis broche 2 de l'ESP32 `U1`.
-  - [ ] Distribution $3.3\text{V}$ vers broche 5 (`VIO`) de `U2` et broche 3 (`VCC`) de `U3`.
+  - [ ] Entrée `VIN` reliée au 5V (`L1` / `C8`).
+  - [ ] Sortie `VOUT` vers perle de ferrite `FB1` et condensateur de filtrage `C6` (1 µF).
+  - [ ] Distribution du rail 3.3V vers le réseau de découplage `C1` à `C4` (100 nF) puis broche 2 de l'ESP32 `U1`.
+  - [ ] Distribution 3.3V vers broche 5 (`VIO`) de `U2` et broche 3 (`VCC`) de `U3`.
 - [ ] **Alimentation 5V :**
-  - [ ] Rail $5\text{V}$ vers broche 3 (`VCC`) du transceiver CAN `U2`.
+  - [ ] Rail 5V vers broche 3 (`VCC`) du transceiver CAN `U2`.
 
 ### 4.2 Routage des Signaux de Communication
 - [ ] **Ligne K-Line (`U3` - `L9637D013TR`) :**
-  - [ ] `UART_RX` : Broche 1 (`RX`) de `U3` $\rightarrow$ `R2` ($10\,\Omega$) $\rightarrow$ Broche 4 (`IO4`) de l'ESP32.
-  - [ ] `UART_TX` : Broche 4 (`TX`) de `U3` $\rightarrow$ `R3` ($10\,\Omega$) $\rightarrow$ Broche 5 (`IO5`) de l'ESP32.
-  - [ ] Ligne physique `K` : Broche 6 (`K`) de `U3` $\rightarrow$ Broche 7 de la prise OBD-II ($0.4\text{ mm}$ à $0.5\text{ mm}$).
+  - [ ] `UART_RX` : Broche 1 (`RX`) de `U3` → `R2` (10 Ω) → Broche 4 (`IO4`) de l'ESP32.
+  - [ ] `UART_TX` : Broche 4 (`TX`) de `U3` → `R3` (10 Ω) → Broche 5 (`IO5`) de l'ESP32.
+  - [ ] Ligne physique `K` : Broche 6 (`K`) de `U3` → Broche 7 de la prise OBD-II (0.4 mm à 0.5 mm).
 - [ ] **Bus CAN (`U2` - `TJA1051T/3/1J`) :**
-  - [ ] Lignes logiques : `TXD` (broche 1) $\rightarrow$ Broche 37 (`TXD0`) ESP32 ; `RXD` (broche 4) $\rightarrow$ Broche 36 (`RXD0`) ESP32.
-  - [ ] Mode normal : Broche 8 (`S`) $\rightarrow$ Masse `GND`.
-  - [ ] Paire différentielle CAN : `CANH` (broche 7) et `CANL` (broche 6) $\rightarrow$ Terminaison `R11` ($120\,\Omega$) $\rightarrow$ Broches 6 et 14 OBD-II *(pistes parallèles, symétriques et de même longueur)*.
+  - [ ] Lignes logiques : `TXD` (broche 1) → Broche 37 (`TXD0`) ESP32 ; `RXD` (broche 4) → Broche 36 (`RXD0`) ESP32.
+  - [ ] Mode normal : Broche 8 (`S`) → Masse `GND`.
+  - [ ] Paire différentielle CAN : `CANH` (broche 7) et `CANL` (broche 6) → Terminaison `R11` (120 Ω) → Broches 6 et 14 OBD-II *(pistes parallèles, symétriques et de même longueur)*.
 - [ ] **Port USB-C & Programmation (`J2`) :**
   - [ ] Signaux `USB_D-` et `USB_D+` depuis `J2` via protections ESD `U8` / `U7` vers broches 13 (`IO19`) et 14 (`IO20`) de l'ESP32.
-  - [ ] Résistances de configuration CC : Broches `CC1` et `CC2` de `J2` vers `R4` et `R5` ($5.1\,\text{k}\Omega$) $\rightarrow$ `GND`.
+  - [ ] Résistances de configuration CC : Broches `CC1` et `CC2` de `J2` vers `R4` et `R5` (5.1 kΩ) → `GND`.
 - [ ] **LED d'État (`LED1`) :**
-  - [ ] Broche 38 (`IO2`) ESP32 $\rightarrow$ `R8` ($1.8\,\text{k}\Omega$) $\rightarrow$ Anode `LED1` $\rightarrow$ Cathode `GND`.
+  - [ ] Broche 38 (`IO2`) ESP32 → `R8` (1.8 kΩ) → Anode `LED1` → Cathode `GND`.
 
 ### 4.3 Plan de Masse & Gestion RF
 - [ ] **Zone d'exclusion d'antenne (Keep-out Zone) :**
   - [ ] Définir une zone `Copper Keepout` sur **toutes les couches (All Layers)** sous et autour de l'antenne méandre de l'ESP32 (coin supérieur droit).
   - [ ] Garantir l'absence totale de cuivre (aucun plan de masse ni piste) pour préserver les performances radio.
 - [ ] **Plans de masse (Copper Area) :**
-  - [ ] Plan `GND` sur **Top Layer** (remplissage Solid, dégagement $0.254\text{ mm} - 0.3\text{ mm}$, Thermal Relief).
-  - [ ] Plan `GND` sur **Bottom Layer** (remplissage Solid, dégagement $0.254\text{ mm} - 0.3\text{ mm}$, Thermal Relief).
+  - [ ] Plan `GND` sur **Top Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief).
+  - [ ] Plan `GND` sur **Bottom Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief).
 - [ ] **Vias de couture (Stitching Vias) :**
   - [ ] Vias de masse sous le pad thermique central de l'ESP32 (broches 41).
   - [ ] Vias de masse au niveau des condensateurs de découplage et du bloc de découpage `U4`/`D2`.
@@ -250,14 +250,11 @@ asyncPrim.setState_Y(newY);
 asyncPrim.done();
 ```
 
-### 6.6 Exemples de requêtes et scripts pour ce projet
+### 6.6 Guide Pratique & Scripts Réutilisables avec le Skill EasyEDA
 
-* *"Liste les pads de U3 (L9637D013TR) et de l'ESP32 (U1), puis trace la piste UART_RX entre la broche 1 de U3 et la broche 4 de U1 en passant par R2."*
-* *"Trace la paire différentielle CAN (CANH/CANL) entre U2 et le connecteur OBD-II en pistes parallèles de même longueur."*
-* *"Crée le plan de masse GND sur Top et Bottom Layer avec un dégagement de 0.254 mm, en respectant la zone d'exclusion sous l'antenne de l'ESP32."*
-* *"Lance une vérification DRC et liste les erreurs restantes."*
+#### 6.6.1 Extraction de la nomenclature (BOM) et des empreintes depuis le PCB
 
-Exemple de script pour extraire la nomenclature complète (BOM) et les empreintes du PCB actif :
+Pour inspecter l'ensemble des composants placés sur le PCB, lire leurs valeurs, références LCSC et empreintes associées :
 
 ```javascript
 const ids = await eda.pcb_PrimitiveComponent.getAllPrimitiveId();
@@ -280,6 +277,148 @@ for (const c of components) {
   });
 }
 return results;
+```
+
+#### 6.6.2 Extraction de la géométrie des pastilles (Pads) par filet (`Net`)
+
+Avant de router une piste, il est indispensable d'interroger la position réelle des pastilles.
+* **Unités :** Les coordonnées renvoyées par l'API PCB sont exprimées en **mils** (1 mil = 0.0254 mm).
+* **Attributs clés :** `center.x`, `center.y`, `num` (numéro de broche), `parentId` (identifiant du composant parent), `topWidth`, `topHeight` (dimensions en dixièmes de mil).
+
+```javascript
+const targetNets = ['+12V', '+12V_PROT'];
+const compIds = await eda.pcb_PrimitiveComponent.getAllPrimitiveId();
+const comps = await eda.pcb_PrimitiveComponent.get(compIds);
+const compMap = new Map();
+for (const c of comps) {
+  compMap.set(c.getState_PrimitiveId(), c.getState_Designator());
+}
+
+const padGeometry = [];
+for (const net of targetNets) {
+  const prims = await eda.pcb_Net.getAllPrimitivesByNet(net);
+  for (const p of prims) {
+    padGeometry.push({
+      designator: compMap.get(p.parentId) || p.parentId,
+      padNumber: p.num,
+      net: p.net,
+      x: Math.round(p.center.x * 10) / 10,
+      y: Math.round(p.center.y * 10) / 10,
+      width_mil: Math.round((p.topWidth || 0) * 10 * 10) / 10,
+      height_mil: Math.round((p.topHeight || 0) * 10 * 10) / 10,
+      shape: p.topType
+    });
+  }
+}
+return padGeometry;
+```
+
+#### 6.6.3 Routage programmatique de pistes et vias
+
+* **Couches au runtime :** Les identifiants de couches sont numériques dans l'environnement navigateur EasyEDA Pro :
+  * `1` = `Top Layer` (couche supérieure)
+  * `2` = `Bottom Layer` (couche inférieure)
+  * `11` = `Board Outline` (contour de carte)
+* **API de tracé de ligne :** `eda.pcb_PrimitiveLine.create(net, layer, startX, startY, endX, endY, lineWidth, primitiveLock)`
+* **API de création de via :** `eda.pcb_PrimitiveVia.create(net, x, y, holeDiameter, diameter)` (dimensions standard JLCPCB : perçage 12 mil ≈ 0.3 mm, diamètre 24 mil ≈ 0.6 mm).
+
+Exemple concret exécuté pour le routage du **Rail +12V et Protection (TODO 4.1)** :
+
+```javascript
+const LAYER_TOP = 1;
+const LAYER_BOTTOM = 2;
+
+const W_POWER_12V = 35;   // ~0.89 mm (largeur de puissance 0.8 - 1.0 mm)
+const W_KLINE_12V = 20;   // ~0.50 mm (alimentation U3)
+const W_SIGNAL = 16;      // ~0.40 mm (polarisation)
+
+// 1. Tracé F1(1) -> D1(1) sur Top Layer (Net: +12V)
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1919.6, -100.0, 1919.6, -343.0, W_POWER_12V, false);
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1919.6, -343.0, 1941.1, -364.5, W_POWER_12V, false);
+
+// 2. Tracé F1(2) -> Q1(2) sur Top Layer (Net: +12V_PROT)
+// Piste de 28 mil (~0.71 mm) centrée à x = 2190 pour respecter les jeux avec D1 pad 2 et L1 pad 1
+const W_PROT = 28;
+await eda.pcb_PrimitiveLine.create('+12V_PROT', LAYER_TOP, 2065.6, -100.0, 2190.0, -224.4, W_PROT, false);
+await eda.pcb_PrimitiveLine.create('+12V_PROT', LAYER_TOP, 2190.0, -224.4, 2190.0, -760.5, W_PROT, false);
+await eda.pcb_PrimitiveLine.create('+12V_PROT', LAYER_TOP, 2190.0, -760.5, 2248.6, -819.1, W_PROT, false);
+
+// 3. Polarisation R10(1) -> R6(1) sur Top Layer (Net: +12V)
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1924.9, -856.5, 1924.9, -1151.3, W_SIGNAL, false);
+
+// 4. Alimentation U3 broche 7 (+12V, 0.5 mm) via Bottom Layer
+await eda.pcb_PrimitiveVia.create('+12V', 1941.1, -440.0, 12, 24);
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1941.1, -364.5, 1941.1, -440.0, W_KLINE_12V, false);
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 1941.1, -440.0, 1941.1, -780.0, W_KLINE_12V, false);
+
+// Raccordement R10(1)
+await eda.pcb_PrimitiveVia.create('+12V', 1924.9, -780.0, 12, 24);
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 1941.1, -780.0, 1924.9, -780.0, W_KLINE_12V, false);
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1924.9, -780.0, 1924.9, -856.5, W_SIGNAL, false);
+
+// Traversée vers U3(7) sur Bottom Layer
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 1941.1, -780.0, 1941.1, -980.0, W_KLINE_12V, false);
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 1941.1, -980.0, 3325.0, -980.0, W_KLINE_12V, false);
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 3325.0, -980.0, 3325.0, -595.0, W_KLINE_12V, false);
+
+// Via 3 vers Top Layer (y = -595 évite tout conflit avec U2 et U3 pad 8)
+await eda.pcb_PrimitiveVia.create('+12V', 3325.0, -595.0, 12, 24);
+await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 3325.0, -595.0, 3325.0, -647.6, W_KLINE_12V, false);
+```
+
+#### 6.6.4 Sauvegarde du PCB et vérification des longueurs
+
+Après toute session de routage :
+```javascript
+// 1. Sauvegarder les modifications dans EasyEDA Pro
+await eda.pcb_Document.save();
+
+// 2. Vérifier la longueur totale routée sur les réseaux
+const len12v = await eda.pcb_Net.getNetLength('+12V');
+const len12vProt = await eda.pcb_Net.getNetLength('+12V_PROT');
+return { len12v, len12vProt };
+```
+
+#### 6.6.5 Capture et mise à jour de l'aperçu PCB (`./images/PCB.png`)
+
+Pour exporter fidèlement la vue du circuit imprimé depuis EasyEDA Pro et mettre à jour l'image de documentation :
+
+1. **Centrage et zoom automatique :** Utiliser `eda.pcb_Document.zoomToBoardOutline()` pour cadrer la vue sur l'ensemble du contour de carte.
+2. **Extraction du canvas :** Appeler `eda.dmt_EditorControl.getCurrentRenderedAreaImage(tabId)` qui renvoie un objet standard `Blob` (PNG).
+3. **Conversion Base64 et sauvegarde :** Convertir le Blob via l'API `FileReader` du navigateur, puis écrire les octets décodés dans `images/PCB.png`.
+
+Script PowerShell / Node.js d'automatisation :
+
+```powershell
+$code = @"
+const doc = await eda.dmt_SelectControl.getCurrentDocumentInfo();
+// 1. Cadrer la vue sur le contour de carte
+await eda.pcb_Document.zoomToBoardOutline();
+await new Promise(r => setTimeout(r, 400));
+
+// 2. Récupérer le Blob du rendu canvas
+const blob = await eda.dmt_EditorControl.getCurrentRenderedAreaImage(doc.tabId);
+if (!blob) return { error: 'No blob' };
+
+// 3. Encoder en Base64 dans le contexte navigateur
+return new Promise((resolve) => {
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    const base64 = reader.result.split(',')[1];
+    resolve({ success: true, base64: base64 });
+  };
+  reader.readAsDataURL(blob);
+});
+"@
+
+$body = @{ code = $code } | ConvertTo-Json
+$res = Invoke-RestMethod -Uri "http://localhost:49620/execute" -Method Post -Body $body -ContentType "application/json"
+
+if ($res.result.success -and $res.result.base64) {
+  $bytes = [Convert]::FromBase64String($res.result.base64)
+  [IO.File]::WriteAllBytes("images/PCB.png", $bytes)
+  Write-Output "PCB.png mis à jour avec succès ($($bytes.Length) octets)"
+}
 ```
 
 ### 6.7 Dépannage
