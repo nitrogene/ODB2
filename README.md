@@ -20,17 +20,63 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
 
 ## 2. Architecture Matérielle & Composants Clés
 
+### 2.1 Composants Clés du Système
+
 | Fonction | Réf. Composant | Boîtier | Description |
 | :--- | :--- | :--- | :--- |
-| **Microcontrôleur & RF** | `U1` (ESP32-WROOM-32E) | SMD Module | MCU Wi-Fi/Bluetooth double cœur avec antenne PCB intégrée. |
+| **Microcontrôleur & RF** | `U1` (ESP32-S3-WROOM-1-N16R8) | SMD Module | MCU Wi-Fi/BLE double cœur Xtensa LX7 (16MB Flash, 8MB PSRAM), antenne PCB intégrée. |
 | **Transceiver K-Line** | `U3` (L9637D013TR) | SOIC-8 | Émetteur-récepteur ISO 9141/KWP2000 avec protection thermique et court-circuit. |
 | **Transceiver CAN** | `U2` (TJA1051T/3/1J) | SOIC-8 | Transceiver CAN haute vitesse avec broche d'adaptation de niveau `VIO` (3.3V). |
 | **Régulateur Buck (12V $\rightarrow$ 5V)** | `U4` (TPS54331DR) | SOIC-8 | Convertisseur step-down synchrone 3.5V-28V, 3A. |
-| **Régulateur LDO (5V $\rightarrow$ 3.3V)** | `U5` (LDL1117S33R) | SOT-223 | LDO à faible chute de tension et fort réjection de bruit (PSRR). |
-| **Amortissement UART** | `R2`, `R3` ($10\,\Omega$) | 0603 | Résistances série d'amortissement sur les lignes `UART_RX` et `UART_TX` vers l'ESP32. |
-| **Terminaison CAN** | `R11` ($120\,\Omega$) | 0603 | Résistance de terminaison de ligne du bus différentiel CAN. |
-| **Protection ESD USB** | `U7`, `U8` (SD05C / BB05C) | SOD-323 | Diodes de protection ESD sur les lignes différentielles USB D+/D-. |
+| **Régulateur LDO (5V $\rightarrow$ 3.3V)** | `U5` (LDL1117S33R) | SOT-223-4 | LDO 3.3V 1.2A à faible chute de tension et fort réjection de bruit (PSRR). |
+| **Amortissement UART** | `R2`, `R3` ($10\,\Omega$) | 0805 | Résistances série d'amortissement sur les lignes `UART_RX` et `UART_TX` vers l'ESP32. |
+| **Terminaison CAN** | `R11` ($120\,\Omega$) | 0805 | Résistance de terminaison de ligne du bus différentiel CAN. |
+| **Protection ESD USB** | `U7`, `U8` (SD05C) | SOD-323 | Diodes de protection ESD bidirectionnelles sur les lignes USB D+/D-. |
+| **Protection Surtension 12V** | `D1` (SMBJ24A) | SMB | Diode TVS 24V d'écrêtage des transitoires automobiles. |
+| **Roue libre Buck** | `D2` (SS34) | SMA | Diode Schottky 40V 3A pour le découpage de `U4`. |
 | **Connecteur USB-C** | `J2` (U263-161N-5BVZ15-2) | 16-pin SMD | Port USB-C pour alimentation de test, programmation et débogage. |
+
+---
+
+### 2.2 Nomenclature Complète du PCB (33 composants)
+
+Inventaire extrait directement du fichier PCB actif (`PCB1`) via l'API EasyEDA Pro :
+
+| Désignateur | Valeur (`Value`) | Référence Fabricant (`Device`) | Empreinte (`Footprint`) | Description / Fonction |
+| :--- | :--- | :--- | :--- | :--- |
+| **C1** | 100nF | CL10B104KB8NNNC | `C0603` | Découplage alimentation ESP32 (rail 3.3V) |
+| **C2** | 100nF | CL10B104KB8NNNC | `C0603` | Découplage alimentation ESP32 (rail 3.3V) |
+| **C3** | 100nF | CL10B104KB8NNNC | `C0603` | Découplage alimentation transceiver CAN `U2` |
+| **C4** | 100nF | CL10B104KB8NNNC | `C0603` | Découplage alimentation transceiver K-Line `U3` |
+| **C5** | 1uF | CL10A105KA8NNNC | `C0603` | Bootstrap convertisseur Buck `U4` (broches BOOT $\rightarrow$ PH) |
+| **C6** | 1uF | CL10A105KA8NNNC | `C0603` | Filtrage sortie régulateur LDO `U5` (rail 3.3V) |
+| **C7** | 22uF | TCC1206X5R226K250HT | `C1206` | Condensateur réservoir entrée Buck `U4` (rail 12V VIN) |
+| **C8** | 22uF | TCC1206X5R226K250HT | `C1206` | Condensateur filtrage sortie Buck `U4` (rail 5V VOUT) |
+| **D1** | *—* | SMBJ24A_C19077578 | `SMB_L4.3-W3.6-LS5.3-RD` | Diode TVS 24V de protection contre les surtensions OBD-II |
+| **D2** | *—* | SS34_C52023881 | `SMA_L4.3-W2.6-LS5.1-RD` | Diode Schottky 40V 3A de roue libre pour convertisseur Buck `U4` |
+| **F1** | *—* | MF-MSMF050-2 | `F1812` | Fusible réarmable PPTC 0.5A protection ligne 12V |
+| **FB1** | *—* | BLM18PG121SN1D_C14709 | `L0603` | Perle de ferrite pour filtrage HF du rail 3.3V LDO |
+| **J2** | *—* | U263-161N-5BVZ15-2 | `USB-TH-TYPE-C_U263-161N-5BVZ14-2` | Connecteur USB Type-C 16 broches (flash, debug et test 5V) |
+| **L1** | 10uH | YNR6045-100M | `IND-SMD_L6.0-W6.0` | Inductance blindée 10µH étage Buck `U4` |
+| **LED1** | *—* | PSC-1608U52GC-G4 | `LED0603-RD_GREEN` | LED d'état verte pilotée par la broche IO2 de l'ESP32 |
+| **Q1** | *—* | IRLML2244TRPBF | `SOT-23-3_L2.9-W1.6-P1.90-LS2.8-BR` | P-MOSFET protection contre l'inversion de polarité 12V |
+| **Q2** | *—* | 2N7002_C50176485 | `SOT-23-3_L2.9-W1.3-P1.90-LS2.4-BR` | N-MOSFET commande et commutation alimentation |
+| **R2** | 10Ω | FRC0805F10R0TS | `R0805` | Résistance série amortissement ligne K-Line RX |
+| **R3** | 10Ω | FRC0805F10R0TS | `R0805` | Résistance série amortissement ligne K-Line TX |
+| **R4** | 5.1kΩ | 0805W8F5101T5E | `R0805` | Résistance pull-down USB-C configuration CC1 |
+| **R5** | 5.1kΩ | 0805W8F5101T5E | `R0805` | Résistance pull-down USB-C configuration CC2 |
+| **R6** | 10kΩ | 0805W8F1002T5E | `R0805` | Résistance de polarisation / pull-up |
+| **R8** | 1.8kΩ | FRC0805J182 TS | `R0805` | Résistance de limitation de courant LED1 |
+| **R10** | 10kΩ | 0805W8F1002T5E | `R0805` | Résistance de polarisation / pull-up |
+| **R11** | 120Ω | 0805W8F1200T5E | `R0805` | Résistance de terminaison de ligne différentielle CAN |
+| **U1** | 2.4GHz | ESP32-S3-WROOM-1-N16R8 | `WIRELM-SMD_ESP32-S3-WROOM-1` | SoC ESP32-S3 Wi-Fi 2.4 GHz + BLE 5.0 (16MB Flash / 8MB PSRAM) |
+| **U2** | *—* | TJA1051T/3/1J | `SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL` | Transceiver CAN haute vitesse avec broche VIO (3.3V) |
+| **U3** | *—* | E-L9637D013TR | `SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL` | Transceiver K-Line ISO 9141 / KWP2000 |
+| **U4** | *—* | TPS54331DR | `SOIC-8_L5.0-W4.0-P1.27-LS6.0-BL` | Régulateur abaisseur Step-Down Buck 12V $\rightarrow$ 5V, 3A |
+| **U5** | *—* | LDL1117S33R | `SOT-223-4_L6.5-W3.5-P2.30-LS7.0-BR` | Régulateur linéaire LDO 5V $\rightarrow$ 3.3V faible bruit, 1.2A |
+| **U7** | *—* | SD05C_C53238084 | `SOD-323_L1.7-W1.3-LS2.5-BI` | Diode ESD bidirectionnelle protection ligne USB D+ |
+| **U8** | *—* | SD05C_C53238084 | `SOD-323_L1.7-W1.3-LS2.5-BI` | Diode ESD bidirectionnelle protection ligne USB D- |
+| **VBUS_5V**| *—* | Test-Point | `Test-Point-0.5mm` | Point de test pad cuivre pour le rail 5V USB |
 
 ---
 
@@ -204,12 +250,37 @@ asyncPrim.setState_Y(newY);
 asyncPrim.done();
 ```
 
-### 6.6 Exemples de requêtes pour ce projet
+### 6.6 Exemples de requêtes et scripts pour ce projet
 
 * *"Liste les pads de U3 (L9637D013TR) et de l'ESP32 (U1), puis trace la piste UART_RX entre la broche 1 de U3 et la broche 4 de U1 en passant par R2."*
 * *"Trace la paire différentielle CAN (CANH/CANL) entre U2 et le connecteur OBD-II en pistes parallèles de même longueur."*
 * *"Crée le plan de masse GND sur Top et Bottom Layer avec un dégagement de 0.254 mm, en respectant la zone d'exclusion sous l'antenne de l'ESP32."*
 * *"Lance une vérification DRC et liste les erreurs restantes."*
+
+Exemple de script pour extraire la nomenclature complète (BOM) et les empreintes du PCB actif :
+
+```javascript
+const ids = await eda.pcb_PrimitiveComponent.getAllPrimitiveId();
+const components = await eda.pcb_PrimitiveComponent.get(ids);
+
+const results = [];
+for (const c of components) {
+  const fpInfo = c.getState_Footprint?.() || c.footprint;
+  let fpName = '';
+  if (fpInfo?.uuid && fpInfo?.libraryUuid) {
+    const fp = await eda.lib_Footprint.get(fpInfo.uuid, fpInfo.libraryUuid);
+    fpName = fp?.name || fp || '';
+  }
+
+  const props = c.getState_OtherProperty?.() || {};
+  results.push({
+    designator: c.getState_Designator?.() || c.designator,
+    value: props.Value || props.Device || '',
+    footprint: fpName
+  });
+}
+return results;
+```
 
 ### 6.7 Dépannage
 
