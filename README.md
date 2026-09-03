@@ -26,21 +26,23 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
 | :--- | :--- | :--- | :--- |
 | **Microcontrôleur & RF** | `U1` (ESP32-S3-WROOM-1-N16R8) | SMD Module | MCU Wi-Fi/BLE double cœur Xtensa LX7 (16MB Flash, 8MB PSRAM), antenne PCB intégrée. |
 | **Transceiver K-Line** | `U3` (L9637D013TR) | SOIC-8 | Émetteur-récepteur ISO 9141/KWP2000 avec protection thermique et court-circuit. |
-| **Transceiver CAN** | `U2` (TJA1051T/3/1J) | SOIC-8 | Transceiver CAN haute vitesse avec broche d'adaptation de niveau `VIO` (3.3V). |
-| **Régulateur Buck (12V → 5V)** | `U4` (TPS54331DR) | SOIC-8 | Convertisseur step-down synchrone 3.5V-28V, 3A. |
+| **Transceiver CAN** | `U2` (TJA1051T/3/1J) | SOIC-8 | Transceiver CAN haute vitesse alimenté en 5V (`VCC`) avec broche d'adaptation logique `VIO` (3.3V). |
+| **Régulateur Buck (12V → 5V)** | `U4` (TPS54331DR) | SOIC-8 | Convertisseur step-down non-synchrone 3.5V-28V, 3A (diode de roue libre externe `D2`). |
 | **Régulateur LDO (5V → 3.3V)** | `U5` (LDL1117S33R) | SOT-223-4 | LDO 3.3V 1.2A à faible chute de tension et fort réjection de bruit (PSRR). |
 | **Amortissement UART** | `R2`, `R3` (10 Ω) | 0805 | Résistances série d'amortissement sur les lignes `UART_RX` et `UART_TX` vers l'ESP32. |
 | **Terminaison CAN** | `R11` (120 Ω) | 0805 | Résistance de terminaison de ligne du bus différentiel CAN. |
 | **Protection ESD USB** | `U7`, `U8` (SD05C) | SOD-323 | Diodes de protection ESD bidirectionnelles sur les lignes USB D+/D-. |
 | **Protection Surtension 12V** | `D1` (SMBJ24A) | SMB | Diode TVS 24V d'écrêtage des transitoires automobiles. |
-| **Roue libre Buck** | `D2` (SS34) | SMA | Diode Schottky 40V 3A pour le découpage de `U4`. |
+| **Roue libre Buck** | `D2` (SS34) | SMA | Diode Schottky 40V 3A de roue libre (cathode sur `PH`, anode sur `GND`). |
+| **Feedback Buck 5V** | `R12` (10 kΩ), `R13` (1.91 kΩ) | 0805 | Pont diviseur de contre-réaction fixant la régulation de sortie de `U4` à 5.0V (broche `VSENSE`). |
+| **Compensation Buck** | `R14` (10 kΩ), `C9` (3.3 nF) | 0805 / 0603 | Réseau série de compensation de boucle pour la stabilité de `U4` (broche `COMP`). |
 | **Connecteur USB-C** | `J2` (U263-161N-5BVZ15-2) | 16-pin SMD | Port USB-C pour alimentation de test, programmation et débogage. |
 
 ---
 
-### 2.2 Nomenclature Complète du PCB (33 composants)
+### 2.2 Nomenclature Complète du Schéma & PCB (37 composants)
 
-Inventaire extrait directement du fichier PCB actif (`PCB1`) via l'API EasyEDA Pro :
+Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
 
 | Désignateur | Valeur (`Value`) | Référence Fabricant (`Device`) | Empreinte (`Footprint`) | Description / Fonction |
 | :--- | :--- | :--- | :--- | :--- |
@@ -51,9 +53,10 @@ Inventaire extrait directement du fichier PCB actif (`PCB1`) via l'API EasyEDA P
 | **C5** | 1uF | CL10A105KA8NNNC | `C0603` | Bootstrap convertisseur Buck `U4` (broches BOOT → PH) |
 | **C6** | 1uF | CL10A105KA8NNNC | `C0603` | Filtrage sortie régulateur LDO `U5` (rail 3.3V) |
 | **C7** | 22uF | TCC1206X5R226K250HT | `C1206` | Condensateur réservoir entrée Buck `U4` (rail 12V VIN) |
-| **C8** | 22uF | TCC1206X5R226K250HT | `C1206` | Condensateur filtrage sortie Buck `U4` (rail 5V VOUT) |
+| **C8** | 22uF | TCC1206X5R226K250HT | `C1206` | Condensateur filtrage sortie Buck `U4` (dérivation rail 5V vers GND) |
+| **C9** | 3.3nF | CL10B332KB8NNNC | `C0603` | Condensateur de compensation de boucle Buck `U4` (broche COMP vers GND) |
 | **D1** | *—* | SMBJ24A_C19077578 | `SMB_L4.3-W3.6-LS5.3-RD` | Diode TVS 24V de protection contre les surtensions OBD-II |
-| **D2** | *—* | SS34_C52023881 | `SMA_L4.3-W2.6-LS5.1-RD` | Diode Schottky 40V 3A de roue libre pour convertisseur Buck `U4` |
+| **D2** | *—* | SS34_C52023881 | `SMA_L4.3-W2.6-LS5.1-RD` | Diode Schottky 40V 3A de roue libre (Cathode sur PH, Anode sur GND) pour convertisseur Buck `U4` |
 | **F1** | *—* | MF-MSMF050-2 | `F1812` | Fusible réarmable PPTC 0.5A protection ligne 12V |
 | **FB1** | *—* | BLM18PG121SN1D_C14709 | `L0603` | Perle de ferrite pour filtrage HF du rail 3.3V LDO |
 | **J2** | *—* | U263-161N-5BVZ15-2 | `USB-TH-TYPE-C_U263-161N-5BVZ14-2` | Connecteur USB Type-C 16 broches (flash, debug et test 5V) |
@@ -69,6 +72,9 @@ Inventaire extrait directement du fichier PCB actif (`PCB1`) via l'API EasyEDA P
 | **R8** | 1.8kΩ | FRC0805J182 TS | `R0805` | Résistance de limitation de courant LED1 |
 | **R10** | 10kΩ | 0805W8F1002T5E | `R0805` | Résistance de polarisation / pull-up |
 | **R11** | 120Ω | 0805W8F1200T5E | `R0805` | Résistance de terminaison de ligne différentielle CAN |
+| **R12** | 10kΩ | 0805W8F1002T5E | `R0805` | Résistance haute pont diviseur feedback Buck `U4` (rail 5V vers VSENSE) |
+| **R13** | 1.91kΩ | 0805W8F1911T5E | `R0805` | Résistance basse pont diviseur feedback Buck `U4` (VSENSE vers GND) |
+| **R14** | 10kΩ | 0805W8F1002T5E | `R0805` | Résistance série compensation de boucle Buck `U4` (broche COMP) |
 | **U1** | 2.4GHz | ESP32-S3-WROOM-1-N16R8 | `WIRELM-SMD_ESP32-S3-WROOM-1` | SoC ESP32-S3 Wi-Fi 2.4 GHz + BLE 5.0 (16MB Flash / 8MB PSRAM) |
 | **U2** | *—* | TJA1051T/3/1J | `SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL` | Transceiver CAN haute vitesse avec broche VIO (3.3V) |
 | **U3** | *—* | E-L9637D013TR | `SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL` | Transceiver K-Line ISO 9141 / KWP2000 |
@@ -82,11 +88,15 @@ Inventaire extrait directement du fichier PCB actif (`PCB1`) via l'API EasyEDA P
 
 ## 3. État Actuel de l'Implémentation
 
-* **Schématique :** Schéma complet validé sous EasyEDA Pro (feuille `P1`).
-* **Placement des composants (PCB) :** Placement 2D compact validé et sectorisé :
+* **Schématique :** Schéma complet validé sous EasyEDA Pro (feuille `P1`), mis à jour et corrigé le 03/09/2026 :
+  * *Étage Buck TPS54331 (`U4`) :* Recâblage conforme de la diode Schottky de roue libre `D2` (`SS34` : cathode sur `PH`, anode sur `GND`), condensateur de sortie `C8` (22 µF) en dérivation vers la masse, ajout du pont diviseur de feedback `R12` (10 kΩ) / `R13` (1.91 kΩ) fixant la régulation à 5.0V sur `VSENSE`, et du réseau série de compensation `R14` (10 kΩ) / `C9` (3.3 nF) sur `COMP`.
+  * *Rail +5V :* Alimentation de l'étage LDO `U5` et de la broche 3 (`VCC`) du transceiver CAN `U2`.
+  * *Visibilité & Raccordement :* Toutes les étiquettes (`R12`, `R13`, `R14`, `C9` et leurs valeurs) et les continuités physiques vers les broches et drapeaux `GND` sont vérifiées.
+* **Placement des composants (PCB) :** Placement 2D compact initialement validé sur 33 composants :
   * *Bloc Puissance (à gauche) :* Protections 12V, convertisseur buck `TPS54331` et régulateur `LDL1117`.
   * *Bloc Interfaces (au centre) :* Puces CAN `U2` et K-Line `U3`.
   * *Bloc Logique & Antenne (à droite) :* Module ESP32 avec son antenne orientée vers le bord extérieur libre.
+  * *Composants à synchroniser :* Les 4 nouveaux composants (`R12`, `R13`, `R14`, `C9`) doivent être importés et placés sur le PCB.
 * **Contour de carte (Board Outline) :** Défini et tracé sur la couche dédiée.
 
 ### Schéma
@@ -96,26 +106,50 @@ Inventaire extrait directement du fichier PCB actif (`PCB1`) via l'API EasyEDA P
 ### PCB
 
 ![PCB ODB2 Scanner](./images/PCB.png)
+
+---
+
+### 3.1 Prochaine Étape Immédiate
+
+> [!IMPORTANT]
+> **Prochaine action à exécuter : Synchronisation Schéma → PCB & Routage de l'étage Buck**
+>
+> 1. **Importer les modifications dans le PCB (`Design > Update PCB`) :**
+>    * Injecter les 4 nouveaux composants (`R12`, `R13`, `R14`, `C9`) dans le layout `PCB1`.
+>    * Actualiser le chevelu (ratsnest) : nouvelle boucle de roue libre pour `D2` (`PH` → `GND`), filtrage shunt pour `C8` (`+5V` → `GND`), et alimentation `+5V` sur la broche 3 (`VCC`) de `U2`.
+> 2. **Placement 2D des composants de l'étage Buck sur le PCB :**
+>    * Rapprocher `D2` (`SS34`) au plus près immédiat de la broche 8 (`PH`) de `U4` et de l'entrée de `L1` pour minimiser la surface de la boucle de commutation critique (source majeure d'EMI).
+>    * Placer `C8` en sortie directe de `L1`.
+>    * Placer le pont diviseur `R12` / `R13` au plus près de la broche 5 (`VSENSE`).
+>    * Placer le réseau série `R14` / `C9` au plus près de la broche 6 (`COMP`).
+> 3. **Routage de l'étage Buck :**
+>    * Procéder au tracé des pistes de puissance de l'étage Buck selon la checklist ci-dessous (§ 4.1).
+
 ---
 
 ## 4. Feuille de Route & Checklist (TODO)
 
-### 4.1 Routage des Pistes d'Alimentation
+### 4.1 Étage Buck & Routage des Pistes d'Alimentation
 - [x] **Rail +12V et Protection :** *(Routage réalisé via l'API EasyEDA Pro)*
   - [x] Piste large (0.8 mm à 1.0 mm) reliant la broche 16 OBD → Fusible `F1` → Diode TVS `D1` → MOSFETs `Q1`/`Q2`. *(Pistes de puissance de 35 mil / ~0.89 mm tracées sur Top Layer, reliant l'entrée F1(1) à D1(1), F1(2) vers Q1(2) et polarisation R10/R6)*
   - [x] Piste 12V vers la broche 7 (`VS`) de `U3` (0.5 mm). *(Piste 20 mil / ~0.50 mm routée via Bottom Layer et 2 vias de 24/12 mil pour franchir l'étage de découpage central)*
-- [ ] **Étage Buck 12V → 5V (`TPS54331DR` / `U4`) :**
-  - [ ] Boucle de commutation courte et large : `U4` (broche 8 PH), inductance `L1` (10 µH) et diode Schottky `D2` (`SS34`).
+- [ ] **Synchronisation & Placement Buck :**
+  - [ ] Exécuter « Update PCB from Schematic » pour importer `R12`, `R13`, `R14`, `C9` et les nouveaux chevelus nets sur le PCB.
+  - [ ] Placer `D2`, `C8`, `R12`, `R13`, `R14`, `C9` sur le PCB selon les règles de minimisation des boucles d'induction et de bruit.
+- [ ] **Routage Étage Buck 12V → 5V (`TPS54331DR` / `U4`) :**
+  - [ ] Boucle de commutation courte et large : `U4` (broche 8 PH), inductance `L1` (10 µH) et diode Schottky `D2` (`SS34` : cathode sur PH, anode sur GND).
   - [ ] Condensateur d'entrée `C7` (22 µF) au plus près de la broche 2 (`VIN`) de `U4`.
-  - [ ] Condensateur de sortie `C8` (22 µF) juste après `L1`.
+  - [ ] Condensateur de sortie `C8` (22 µF) en dérivation juste après `L1` (vers le plan GND).
   - [ ] Condensateur de bootstrap `C5` (1 µF) entre broche 1 (`BOOT`) et broche 8 (`PH`).
+  - [ ] Pont diviseur de feedback : `R12` (10 kΩ) et `R13` (1.91 kΩ) au plus près de la broche 5 (`VSENSE`).
+  - [ ] Réseau de compensation : `R14` (10 kΩ) et `C9` (3.3 nF) au plus près de la broche 6 (`COMP`).
 - [ ] **Étage Régulation 3.3V (`LDL1117S33R` / `U5`) :**
   - [ ] Entrée `VIN` reliée au 5V (`L1` / `C8`).
   - [ ] Sortie `VOUT` vers perle de ferrite `FB1` et condensateur de filtrage `C6` (1 µF).
   - [ ] Distribution du rail 3.3V vers le réseau de découplage `C1` à `C4` (100 nF) puis broche 2 de l'ESP32 `U1`.
   - [ ] Distribution 3.3V vers broche 5 (`VIO`) de `U2` et broche 3 (`VCC`) de `U3`.
 - [ ] **Alimentation 5V :**
-  - [ ] Rail 5V vers broche 3 (`VCC`) du transceiver CAN `U2`.
+  - [ ] Distribution du rail 5V vers broche 3 (`VIN`) de `U5`, broche 3 (`VCC`) du transceiver CAN `U2` et résistance de contre-réaction `R12`.
 
 ### 4.2 Routage des Signaux de Communication
 - [ ] **Ligne K-Line (`U3` - `L9637D013TR`) :**
