@@ -237,9 +237,16 @@ npm run server       # démarre le pont WebSocket/HTTP (port auto 49620-49629)
 3. Sélectionner le fichier téléchargé et vérifier que **"Allow External Interaction"** reste activé.
 4. Ouvrir `ODB2-Scanner.eprj2` : l'extension se connecte automatiquement au serveur en scannant la plage de ports et en validant le handshake (`service: "easyeda-bridge"`).
 
-### 6.4 Connexion depuis le client IA
+### 6.4 Connexion depuis le client IA & Démarrage automatique
 
-Aucune configuration `mcp_config.json` n'est nécessaire. Les outils compatibles **Agent Skills** (Claude Code, OpenCode, QwenCode...) lisent automatiquement `SKILL.md` à la racine du dépôt cloné et disposent alors des instructions et de la documentation API.
+Aucune configuration `mcp_config.json` n'est nécessaire. Les outils compatibles **Agent Skills** (Claude Code, OpenCode, QwenCode, Antigravity...) lisent automatiquement `SKILL.md` à la racine du dépôt cloné et disposent alors des instructions et de la documentation API.
+
+#### Automatisation sous Antigravity (Lifecycle Hook)
+Pour éviter de devoir lancer manuellement `npm run server` ou de valider des invites de permissions de commande shell à chaque session :
+* **Hook de cycle de vie** : Le projet inclut un hook configuré dans [`.agents/hooks.json`](.agents/hooks.json) appelant le script [`.agents/ensure-bridge.mjs`](.agents/ensure-bridge.mjs).
+* **Déclenchement automatique** : Dès qu'une interaction commence dans `agy` (`PreInvocation`), le script teste si le port `49620` (ou plage `49620-49629`) répond. Si le pont est inactif, il est démarré automatiquement en arrière-plan détaché (logs consignés dans `.agents/easyeda-bridge.log`).
+* **Comportement lors d'un arrêt forcé (`kill`)** : Si les processus `node` sont arrêtés manuellement, le serveur reste coupé pendant l'inactivité. Dès que vous envoyez une nouvelle commande ou invite à l'IA, le hook détecte l'absence du serveur et le relance automatiquement avant de traiter la requête.
+* **Désactivation du démarrage automatique** : Pour désactiver ce comportement et empêcher le démarrage en arrière-plan, il suffit de passer `"enabled": false` dans [`.agents/hooks.json`](.agents/hooks.json).
 
 Pour un appel manuel ou un test (le port exact est affiché au démarrage du serveur, ex. `49620`) :
 
@@ -462,6 +469,7 @@ if ($res.result.success -and $res.result.base64) {
 | `Port 49620-49629 already in use` | Une autre instance du serveur tourne déjà | Fermer l'instance existante avant de relancer |
 | `EasyEDA is not connected` / outil indisponible | L'extension `.eext` n'est pas active dans l'onglet EasyEDA Pro | Vérifier que le projet est ouvert avec l'extension chargée et activée |
 | Timeout sur une requête `/execute` | Onglet EasyEDA Pro inactif, ou opération trop longue | Garder l'onglet actif ; relancer la requête |
+| Le serveur Node se relance après un `kill` | Détection automatique par le hook `PreInvocation` (`.agents/hooks.json`) | Passer `"enabled": false` dans `.agents/hooks.json` pour désactiver |
 
 > Si tu retombes sur une erreur du type `AttributeError: 'Server' object has no attribute 'list_tools'` ou `JSON-RPC error -32022: the initialize handshake is not accepted`, c'est un résidu de l'ancienne approche par serveur MCP custom (§ historique 6) — ces erreurs viennent d'incompatibilités de version du SDK Python `mcp` et ne concernent pas le skill officiel décrit ici, qui ne dépend pas de `mcp` du tout.
 

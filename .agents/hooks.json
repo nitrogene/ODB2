@@ -1,0 +1,12 @@
+{
+  "easyeda-bridge-auto": {
+    "enabled": true,
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "node ./ensure-bridge.mjs",
+        "timeout": 10
+      }
+    ]
+  }
+}
