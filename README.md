@@ -92,11 +92,10 @@ Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
   * *Étage Buck TPS54331 (`U4`) :* Recâblage conforme de la diode Schottky de roue libre `D2` (`SS34` : cathode sur `PH`, anode sur `GND`), condensateur de sortie `C8` (22 µF) en dérivation vers la masse, ajout du pont diviseur de feedback `R12` (10 kΩ) / `R13` (1.91 kΩ) fixant la régulation à 5.0V sur `VSENSE`, et du réseau série de compensation `R14` (10 kΩ) / `C9` (3.3 nF) sur `COMP`.
   * *Rail +5V :* Alimentation de l'étage LDO `U5` et de la broche 3 (`VCC`) du transceiver CAN `U2`.
   * *Visibilité & Raccordement :* Toutes les étiquettes (`R12`, `R13`, `R14`, `C9` et leurs valeurs) et les continuités physiques vers les broches et drapeaux `GND` sont vérifiées.
-* **Placement des composants (PCB) :** Placement 2D compact initialement validé sur 33 composants :
-  * *Bloc Puissance (à gauche) :* Protections 12V, convertisseur buck `TPS54331` et régulateur `LDL1117`.
+* **Placement des composants (PCB) :** Placement 2D compact validé pour l'ensemble des 37 composants (retouches et disposition finale validées le 05/09/2026) :
+  * *Bloc Puissance (à gauche) :* Protections 12V, convertisseur buck `TPS54331` (avec `D2`, `C5`, `C7`, `C8`, `R12`, `R13`, `R14`, `C9`) et régulateur `LDL1117`.
   * *Bloc Interfaces (au centre) :* Puces CAN `U2` et K-Line `U3`.
   * *Bloc Logique & Antenne (à droite) :* Module ESP32 avec son antenne orientée vers le bord extérieur libre.
-  * *Composants à synchroniser :* Les 4 nouveaux composants (`R12`, `R13`, `R14`, `C9`) doivent être importés et placés sur le PCB.
 * **Contour de carte (Board Outline) :** Défini et tracé sur la couche dédiée.
 
 ### Schéma
@@ -112,18 +111,13 @@ Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Prochaine action à exécuter : Synchronisation Schéma → PCB & Routage de l'étage Buck**
+> **Prochaine action à exécuter : Routage des pistes de puissance et signaux de l'étage Buck (12V → 5V)**
 >
-> 1. **Importer les modifications dans le PCB (`Design > Update PCB`) :**
->    * Injecter les 4 nouveaux composants (`R12`, `R13`, `R14`, `C9`) dans le layout `PCB1`.
->    * Actualiser le chevelu (ratsnest) : nouvelle boucle de roue libre pour `D2` (`PH` → `GND`), filtrage shunt pour `C8` (`+5V` → `GND`), et alimentation `+5V` sur la broche 3 (`VCC`) de `U2`.
-> 2. **Placement 2D des composants de l'étage Buck sur le PCB :**
->    * Rapprocher `D2` (`SS34`) au plus près immédiat de la broche 8 (`PH`) de `U4` et de l'entrée de `L1` pour minimiser la surface de la boucle de commutation critique (source majeure d'EMI).
->    * Placer `C8` en sortie directe de `L1`.
->    * Placer le pont diviseur `R12` / `R13` au plus près de la broche 5 (`VSENSE`).
->    * Placer le réseau série `R14` / `C9` au plus près de la broche 6 (`COMP`).
-> 3. **Routage de l'étage Buck :**
->    * Procéder au tracé des pistes de puissance de l'étage Buck selon la checklist ci-dessous (§ 4.1).
+> 1. **Alimentation d'entrée 12V Buck (`VIN`) :** Piste large depuis la sortie de protection `Q1(3)` vers le condensateur réservoir `C7` et la broche 2 de `U4`.
+> 2. **Boucle de commutation critique (`PH`) :** Piste large (35 mil) reliant la broche 8 de `U4`, la cathode de `D2` et l'inductance `L1`. Raccordement bootstrap vers `C5(1)`.
+> 3. **Ligne Bootstrap (`BOOT`) :** Liaison directe entre `U4(1)` et `C5(2)`.
+> 4. **Sortie et distribution 5V :** Piste large depuis `L1(2)` vers `C8(1)`, l'entrée du LDO `U5(3)` et la polarisation haute `R12(2)`.
+> 5. **Signaux de contrôle :** Routage court et protégé de `VSENSE` (`U4.5` vers `R12`/`R13`) et `COMP` (`U4.6` vers `R14`/`C9`).
 
 ---
 
@@ -133,9 +127,9 @@ Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
 - [x] **Rail +12V et Protection :** *(Routage réalisé via l'API EasyEDA Pro)*
   - [x] Piste large (0.8 mm à 1.0 mm) reliant la broche 16 OBD → Fusible `F1` → Diode TVS `D1` → MOSFETs `Q1`/`Q2`. *(Pistes de puissance de 35 mil / ~0.89 mm tracées sur Top Layer, reliant l'entrée F1(1) à D1(1), F1(2) vers Q1(2) et polarisation R10/R6)*
   - [x] Piste 12V vers la broche 7 (`VS`) de `U3` (0.5 mm). *(Piste 20 mil / ~0.50 mm routée via Bottom Layer et 2 vias de 24/12 mil pour franchir l'étage de découpage central)*
-- [ ] **Synchronisation & Placement Buck :**
-  - [ ] Exécuter « Update PCB from Schematic » pour importer `R12`, `R13`, `R14`, `C9` et les nouveaux chevelus nets sur le PCB.
-  - [ ] Placer `D2`, `C8`, `R12`, `R13`, `R14`, `C9` sur le PCB selon les règles de minimisation des boucles d'induction et de bruit.
+- [x] **Synchronisation & Placement Buck :**
+  - [x] Exécuter « Update PCB from Schematic » pour importer `R12`, `R13`, `R14`, `C9` et les nouveaux chevelus nets sur le PCB.
+  - [x] Placer `D2`, `C8`, `R12`, `R13`, `R14`, `C9` sur le PCB selon les règles de minimisation des boucles d'induction et de bruit.
 - [ ] **Routage Étage Buck 12V → 5V (`TPS54331DR` / `U4`) :**
   - [ ] Boucle de commutation courte et large : `U4` (broche 8 PH), inductance `L1` (10 µH) et diode Schottky `D2` (`SS34` : cathode sur PH, anode sur GND).
   - [ ] Condensateur d'entrée `C7` (22 µF) au plus près de la broche 2 (`VIN`) de `U4`.
@@ -192,6 +186,8 @@ Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
 
 * `ODB2-Scanner.eprj2` : Projet natif EasyEDA Pro v2 (contenant le schéma `P1` et le circuit imprimé `PCB1`).
 * `README.md` : Documentation technique complète et suivi du projet.
+* `LEARNINGS.md` : Journal de capitalisation technique et découvertes sur l'API EasyEDA Pro.
+* `AGENTS.md` : Règles de gouvernance et consignes strictes pour les agents IA.
 
 ---
 
@@ -291,189 +287,12 @@ asyncPrim.setState_Y(newY);
 asyncPrim.done();
 ```
 
-### 6.6 Guide Pratique & Scripts Réutilisables avec le Skill EasyEDA
+### 6.6 Capitalisation & Découvertes Techniques
 
-#### 6.6.1 Extraction de la nomenclature (BOM) et des empreintes depuis le PCB
+Pour retrouver l'ensemble des subtilités d'implémentation, astuces et découvertes sur l'API EasyEDA Pro (manipulation des pastilles, unités en mil, typage des couches, scripts de capture du canvas en Base64, et pièges de raccordement de schématique), se référer au document dédié :
+👉 **[`./LEARNINGS.md`](./LEARNINGS.md)**.
 
-Pour inspecter l'ensemble des composants placés sur le PCB, lire leurs valeurs, références LCSC et empreintes associées :
-
-```javascript
-const ids = await eda.pcb_PrimitiveComponent.getAllPrimitiveId();
-const components = await eda.pcb_PrimitiveComponent.get(ids);
-
-const results = [];
-for (const c of components) {
-  const fpInfo = c.getState_Footprint?.() || c.footprint;
-  let fpName = '';
-  if (fpInfo?.uuid && fpInfo?.libraryUuid) {
-    const fp = await eda.lib_Footprint.get(fpInfo.uuid, fpInfo.libraryUuid);
-    fpName = fp?.name || fp || '';
-  }
-
-  const props = c.getState_OtherProperty?.() || {};
-  results.push({
-    designator: c.getState_Designator?.() || c.designator,
-    value: props.Value || props.Device || '',
-    footprint: fpName
-  });
-}
-return results;
-```
-
-#### 6.6.2 Extraction de la géométrie des pastilles (Pads) par filet (`Net`)
-
-Avant de router une piste, il est indispensable d'interroger la position réelle des pastilles.
-* **Unités :** Les coordonnées renvoyées par l'API PCB sont exprimées en **mils** (1 mil = 0.0254 mm).
-* **Attributs clés :** `center.x`, `center.y`, `num` (numéro de broche), `parentId` (identifiant du composant parent), `topWidth`, `topHeight` (dimensions en dixièmes de mil).
-
-```javascript
-const targetNets = ['+12V', '+12V_PROT'];
-const compIds = await eda.pcb_PrimitiveComponent.getAllPrimitiveId();
-const comps = await eda.pcb_PrimitiveComponent.get(compIds);
-const compMap = new Map();
-for (const c of comps) {
-  compMap.set(c.getState_PrimitiveId(), c.getState_Designator());
-}
-
-const padGeometry = [];
-for (const net of targetNets) {
-  const prims = await eda.pcb_Net.getAllPrimitivesByNet(net);
-  for (const p of prims) {
-    padGeometry.push({
-      designator: compMap.get(p.parentId) || p.parentId,
-      padNumber: p.num,
-      net: p.net,
-      x: Math.round(p.center.x * 10) / 10,
-      y: Math.round(p.center.y * 10) / 10,
-      width_mil: Math.round((p.topWidth || 0) * 10 * 10) / 10,
-      height_mil: Math.round((p.topHeight || 0) * 10 * 10) / 10,
-      shape: p.topType
-    });
-  }
-}
-return padGeometry;
-```
-
-#### 6.6.3 Routage programmatique de pistes et vias
-
-* **Couches au runtime :** Les identifiants de couches sont numériques dans l'environnement navigateur EasyEDA Pro :
-  * `1` = `Top Layer` (couche supérieure)
-  * `2` = `Bottom Layer` (couche inférieure)
-  * `11` = `Board Outline` (contour de carte)
-* **API de tracé de ligne :** `eda.pcb_PrimitiveLine.create(net, layer, startX, startY, endX, endY, lineWidth, primitiveLock)`
-* **API de création de via :** `eda.pcb_PrimitiveVia.create(net, x, y, holeDiameter, diameter)` (dimensions standard JLCPCB : perçage 12 mil ≈ 0.3 mm, diamètre 24 mil ≈ 0.6 mm).
-
-Exemple concret exécuté pour le routage du **Rail +12V et Protection (TODO 4.1)** :
-
-```javascript
-const LAYER_TOP = 1;
-const LAYER_BOTTOM = 2;
-
-const W_POWER_12V = 35;   // ~0.89 mm (largeur de puissance 0.8 - 1.0 mm)
-const W_KLINE_12V = 20;   // ~0.50 mm (alimentation U3)
-const W_SIGNAL = 16;      // ~0.40 mm (polarisation)
-
-// 1. Tracé F1(1) -> D1(1) sur Top Layer (Net: +12V)
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1919.6, -100.0, 1919.6, -343.0, W_POWER_12V, false);
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1919.6, -343.0, 1941.1, -364.5, W_POWER_12V, false);
-
-// 2. Tracé F1(2) -> Q1(2) sur Top Layer (Net: +12V_PROT)
-// Piste de 28 mil (~0.71 mm) centrée à x = 2190 pour respecter les jeux avec D1 pad 2 et L1 pad 1
-const W_PROT = 28;
-await eda.pcb_PrimitiveLine.create('+12V_PROT', LAYER_TOP, 2065.6, -100.0, 2190.0, -224.4, W_PROT, false);
-await eda.pcb_PrimitiveLine.create('+12V_PROT', LAYER_TOP, 2190.0, -224.4, 2190.0, -760.5, W_PROT, false);
-await eda.pcb_PrimitiveLine.create('+12V_PROT', LAYER_TOP, 2190.0, -760.5, 2248.6, -819.1, W_PROT, false);
-
-// 3. Polarisation R10(1) -> R6(1) sur Top Layer (Net: +12V)
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1924.9, -856.5, 1924.9, -1151.3, W_SIGNAL, false);
-
-// 4. Alimentation U3 broche 7 (+12V, 0.5 mm) via Bottom Layer
-await eda.pcb_PrimitiveVia.create('+12V', 1941.1, -440.0, 12, 24);
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1941.1, -364.5, 1941.1, -440.0, W_KLINE_12V, false);
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 1941.1, -440.0, 1941.1, -780.0, W_KLINE_12V, false);
-
-// Raccordement R10(1)
-await eda.pcb_PrimitiveVia.create('+12V', 1924.9, -780.0, 12, 24);
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 1941.1, -780.0, 1924.9, -780.0, W_KLINE_12V, false);
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 1924.9, -780.0, 1924.9, -856.5, W_SIGNAL, false);
-
-// Traversée vers U3(7) sur Bottom Layer
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 1941.1, -780.0, 1941.1, -980.0, W_KLINE_12V, false);
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 1941.1, -980.0, 3325.0, -980.0, W_KLINE_12V, false);
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_BOTTOM, 3325.0, -980.0, 3325.0, -595.0, W_KLINE_12V, false);
-
-// Via 3 vers Top Layer (y = -595 évite tout conflit avec U2 et U3 pad 8)
-await eda.pcb_PrimitiveVia.create('+12V', 3325.0, -595.0, 12, 24);
-await eda.pcb_PrimitiveLine.create('+12V', LAYER_TOP, 3325.0, -595.0, 3325.0, -647.6, W_KLINE_12V, false);
-```
-
-#### 6.6.4 Sauvegarde du PCB et vérification des longueurs
-
-Après toute session de routage :
-```javascript
-// 1. Sauvegarder les modifications dans EasyEDA Pro
-await eda.pcb_Document.save();
-
-// 2. Vérifier la longueur totale routée sur les réseaux
-const len12v = await eda.pcb_Net.getNetLength('+12V');
-const len12vProt = await eda.pcb_Net.getNetLength('+12V_PROT');
-return { len12v, len12vProt };
-```
-
-#### 6.6.5 Capture et mise à jour de l'aperçu PCB (`./images/PCB.png`)
-
-Pour exporter fidèlement la vue du circuit imprimé depuis EasyEDA Pro et mettre à jour l'image de documentation :
-
-1. **Centrage et zoom automatique :** Utiliser `eda.pcb_Document.zoomToBoardOutline()` pour cadrer la vue sur l'ensemble du contour de carte.
-2. **Extraction du canvas :** Appeler `eda.dmt_EditorControl.getCurrentRenderedAreaImage(tabId)` qui renvoie un objet standard `Blob` (PNG).
-3. **Conversion Base64 et sauvegarde :** Convertir le Blob via l'API `FileReader` du navigateur, puis écrire les octets décodés dans `images/PCB.png`.
-
-Script PowerShell / Node.js d'automatisation :
-
-```powershell
-$code = @"
-const doc = await eda.dmt_SelectControl.getCurrentDocumentInfo();
-// 1. Cadrer la vue sur le contour de carte
-await eda.pcb_Document.zoomToBoardOutline();
-await new Promise(r => setTimeout(r, 400));
-
-// 2. Récupérer le Blob du rendu canvas
-const blob = await eda.dmt_EditorControl.getCurrentRenderedAreaImage(doc.tabId);
-if (!blob) return { error: 'No blob' };
-
-// 3. Encoder en Base64 dans le contexte navigateur
-return new Promise((resolve) => {
-  const reader = new FileReader();
-  reader.onloadend = () => {
-    const base64 = reader.result.split(',')[1];
-    resolve({ success: true, base64: base64 });
-  };
-  reader.readAsDataURL(blob);
-});
-"@
-
-$body = @{ code = $code } | ConvertTo-Json
-$res = Invoke-RestMethod -Uri "http://localhost:49620/execute" -Method Post -Body $body -ContentType "application/json"
-
-if ($res.result.success -and $res.result.base64) {
-  $bytes = [Convert]::FromBase64String($res.result.base64)
-  [IO.File]::WriteAllBytes("images/PCB.png", $bytes)
-  Write-Output "PCB.png mis à jour avec succès ($($bytes.Length) octets)"
-}
-```
-
-### 6.7 Dépannage
-
-| Symptôme | Cause probable | Solution |
-|---|---|---|
-| `Port 49620-49629 already in use` | Une autre instance du serveur tourne déjà | Fermer l'instance existante avant de relancer |
-| `EasyEDA is not connected` / outil indisponible | L'extension `.eext` n'est pas active dans l'onglet EasyEDA Pro | Vérifier que le projet est ouvert avec l'extension chargée et activée |
-| Timeout sur une requête `/execute` | Onglet EasyEDA Pro inactif, ou opération trop longue | Garder l'onglet actif ; relancer la requête |
-| Le serveur Node se relance après un `kill` | Détection automatique par le hook `PreInvocation` (`.agents/hooks.json`) | Passer `"enabled": false` dans `.agents/hooks.json` pour désactiver |
-
-> Si tu retombes sur une erreur du type `AttributeError: 'Server' object has no attribute 'list_tools'` ou `JSON-RPC error -32022: the initialize handshake is not accepted`, c'est un résidu de l'ancienne approche par serveur MCP custom (§ historique 6) — ces erreurs viennent d'incompatibilités de version du SDK Python `mcp` et ne concernent pas le skill officiel décrit ici, qui ne dépend pas de `mcp` du tout.
-
-### 6.8 Bonnes pratiques pour un routage PCB piloté par IA
+### 6.7 Bonnes pratiques pour un routage PCB piloté par IA
 
 En cohérence avec la checklist de routage de la Section 4 de ce document :
 
