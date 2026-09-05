@@ -141,3 +141,65 @@ if ($res.result.success -and $res.result.base64) {
 
 * L'appel programmatique `await eda.pcb_Document.importChanges(schUuid)` renvoie `false` lorsque des boîtes de dialogue interactives de confirmation de changements (liste des composants ajoutés/supprimés et nets modifiés) sont requises par la version desktop d'EasyEDA Pro.
 * Pour une synchronisation fiable de nouveaux composants, privilégier l'action utilisateur via **Conception > Mettre à jour le PCB** (*Design > Update PCB*).
+
+---
+
+## [2026-09-05] Exportation automatisée du projet EasyEDA (`.epro2`)
+
+* **API :** `eda.sys_FileManager.getProjectFile(fileName, password, fileType)`
+* **Fonctionnement :** Renvoie un objet standard Web `File` (Blob). Pour sauvegarder le fichier sur le disque de la machine hôte via le pont WebSocket/HTTP :
+  ```powershell
+  $code = @"
+  const projectFile = await eda.sys_FileManager.getProjectFile('ProPrj_ODB2-Scanner', undefined, 'epro2');
+  if (!projectFile) return { error: 'Failed to get project file' };
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result.split(',')[1];
+      resolve({ success: true, name: projectFile.name, size: projectFile.size, base64: base64 });
+    };
+    reader.readAsDataURL(projectFile);
+  });
+  "@
+
+  $body = @{ code = $code } | ConvertTo-Json
+  $res = Invoke-RestMethod -Uri "http://localhost:49620/execute" -Method Post -Body $body -ContentType "application/json"
+
+  if ($res.result.success -and $res.result.base64) {
+    $bytes = [Convert]::FromBase64String($res.result.base64)
+    [IO.File]::WriteAllBytes("easyeda/ProPrj_ODB2-Scanner.epro2", $bytes)
+  }
+  ```
+
+---
+
+## [2026-09-05] Exportation haute résolution native du schéma (`PNG`)
+
+* **API :** `eda.sch_ManufactureData.getPngFile(fileName, resolution)`
+* **Avantage :** Contrairement à la capture d'écran du viewport canvas (qui dépend du niveau de zoom de l'utilisateur), cette méthode exporte directement la planche schématique complète avec cartouche, cadre et résolution vectorielle propre :
+  ```javascript
+  const pngFile = await eda.sch_ManufactureData.getPngFile('Schematic');
+  // Lecture du blob via FileReader (base64) pour écriture sur le disque
+  ```
+
+---
+
+## [2026-09-05] Manipulation 2D des composants PCB (Position & Rotation)
+
+* **API directe :** `eda.pcb_PrimitiveComponent.modify(primitiveId, { x, y, rotation })`
+  * *Note :* Privilégier cette méthode à l'approche `c.toAsync()`, car `get([id])` retourne un tableau, ce qui peut causer des erreurs de type si non déstructuré.
+* **Repère d'orientation des pastilles (composants passifs à 2 broches ex. 0805, 0603, SMA) :**
+  * `0°` : Horizontal standard — Pastille 1 à gauche, Pastille 2 à droite.
+  * `90°` : Vertical — Pastille 1 en bas, Pastille 2 en haut.
+  * `180°` : Horizontal inversé — Pastille 1 à droite, Pastille 2 à gauche.
+  * `270°` : Vertical inversé — Pastille 1 en haut, Pastille 2 en bas.
+
+---
+
+## [2026-09-05] Contrôle DRC programmatique
+
+* **API :** `await eda.pcb_Drc.check()`
+* **Comportement :** Renvoie un booléen immédiat :
+  * `true` : Aucun conflit DRC détecté (règles de dégagement, chevauchements et continuité respectées).
+  * `false` : Présence de violations DRC (ex. discordance de nom de net entre pastille et piste, ou distance d'isolement insuffisante).
