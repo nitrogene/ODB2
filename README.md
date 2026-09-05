@@ -1,6 +1,6 @@
-# Scanner OBD-II ESP32 (Daewoo Kalos)
+# Scanner OBD-II ESP32
 
-Projet de conception matérielle (schématique et PCB) d'un scanner de diagnostic automobile OBD-II intelligent et communicant, optimisé pour une **Daewoo Kalos (2003, moteur 1.4L)**.
+Projet de conception matérielle (schématique et PCB) d'un scanner de diagnostic automobile OBD-II intelligent et communicant.
 
 ---
 
