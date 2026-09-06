@@ -235,3 +235,45 @@ if ($res.result.success -and $res.result.base64) {
 * **API :** `await eda.pcb_PrimitiveLine.delete([primitiveId1, primitiveId2, ...])`
 * **Fonctionnement :** Supprime immédiatement les segments de ligne spécifiés par leur identifiant primitif (`primitiveId`), facilitant les ajustements de tracé et le ré-routage propre.
 
+---
+
+## [2026-09-06] Annotation textuelle du schéma (`sch_PrimitiveText`) & Système de coordonnées
+
+* **API :** `eda.sch_PrimitiveText.create(x, y, text, angle, font, fontSize, color, bold, italic)`
+  * Exemple : `await eda.sch_PrimitiveText.create(50, 480, "ALIMENTATION", 0, undefined, 9, "#003388", true, false)`
+* **Repère et orientation du schéma (`documentType: 1`) :**
+  * Format standard A4 : Largeur 1170, Hauteur 825.
+  * **L'axe Y est orienté vers le HAUT** (`y = 0` en bas de page, `y = 825` en haut de page).
+  * Attention : inversé par rapport au PCB où l'origine et l'orientation peuvent varier selon le cadrage.
+* **Usage :** Permet d'insérer des titres et des annotations explicatives directement au-dessus des blocs de composants sans risque de court-circuit électrique (éléments purement graphiques).
+
+---
+
+## [2026-09-06] Robustesse des scripts d'exportation (Node.js vs PowerShell)
+
+* Lors du transfert de gros volumes de données Base64 (ex. captures PNG haute résolution `getCurrentRenderedAreaImage`), les variables PowerShell `$base64` peuvent être interpolées et vidées si incluses par inadvertance dans des blocs `@"..."@`.
+* L'exécution via un script Node.js exécuté via `node -e` ou un fichier scratch (`fetch('http://localhost:49620/execute')` et `Buffer.from(base64, 'base64')`) est plus robuste, gère directement les promesses JavaScript et évite tout conflit d'échappement shell.
+
+---
+
+## [2026-09-06] Rafraîchissement du rendu visuel des textes de pistes sur le canvas PCB (Cache WebGL)
+
+* **Problème découvert :** Modifier la propriété `net` d'une piste via l'API (ou recréer la piste) met bien à jour la base de données interne du PCB (le panneau Propriétés / Détails de l'objet sélectionné affiche le nouveau nom), mais le texte imprimé le long de la piste dans le canvas WebGL continue d'afficher l'ancien nom de net (ex. `$1N15` au lieu de `+12V_PROT`).
+* **Cause technique :** Le moteur graphique d'EasyEDA Pro met en cache les textures de rendu des textes vectoriels sur les pistes tant que l'onglet du document reste ouvert.
+* **Solution programmatique éprouvée :**
+  ```javascript
+  // 1. Sauvegarder les modifications dans la base du document
+  await eda.pcb_Document.save();
+  await new Promise(r => setTimeout(r, 400));
+
+  // 2. Fermer l'onglet actif
+  const doc = await eda.dmt_SelectControl.getCurrentDocumentInfo();
+  await eda.dmt_EditorControl.closeDocument(doc.tabId);
+  await new Promise(r => setTimeout(r, 600));
+
+  // 3. Réouvrir le document
+  await eda.dmt_EditorControl.openDocument(pcbUuid);
+  await new Promise(r => setTimeout(r, 1000));
+  ```
+* **Résultat :** La fermeture/réouverture force la destruction et la reconstruction complète du contexte WebGL et le rechargement propre des données depuis le stockage, répercutant immédiatement les nouveaux noms de nets sur tout le canvas.
+

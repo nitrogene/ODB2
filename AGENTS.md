@@ -12,6 +12,10 @@
 - Ne jamais utiliser .\easyeda\ProPrj_ODB2-Scanner.epro2. Ce fichier est exclusivement modifié lors des "Étapes post validation d'une feature"
 - Il est possible de demander un export png du schéma dans .\images\Schematic.png, du pcb dans .\images\PCB.png, si c'est plus simple pour obtenir des informations visuelles
 
+## Documentation du schéma
+
+- Ne pas hésiter à enrichir le schéma d'explications ou de mini-schémas décrivant le rôle de chaque groupe de composants (alimentation, filtrage, interface CAN, etc.) — mieux vaut trop de documentation visuelle que pas assez.
+
 ## État de référence du projet ("baseline propre")
 
 Le projet est considéré dans un état de référence valide quand toutes ces conditions sont réunies :
@@ -19,6 +23,8 @@ Le projet est considéré dans un état de référence valide quand toutes ces c
 - Le schéma et le PCB passent le DRC sans erreur
 - `./easyeda/ProPrj_ODB2-Scanner.epro2`, `./images/Schematic.png` et `./images/PCB.png` reflètent fidèlement l'état courant du projet EasyEDA (réexportés via les skills easyeda-api)
 - `git status` ne montre aucune modification en attente (tout est commité et pushé)
+- Il ne doit pas y avoir de symbole latex dans le README.md
+- Les net labels doivent être lisibles et porteur d'information (pas de $1NXXX ou autre)
 
 Cette checklist est le socle commun utilisé avant de démarrer une feature et pour valider la fin d'une feature (voir sections ci-dessous).
 
@@ -35,7 +41,6 @@ Cette checklist est le socle commun utilisé avant de démarrer une feature et p
 
 Ces étapes sont séquentielles et bloquantes : si une étape échoue, ne pas exécuter les étapes suivantes et signaler l'échec à l'utilisateur.
 
-- Le PCB doit être valide (check DRC)
 - Voir s'il est nécessaire d'enrichir LEARNINGS.md
 - Utiliser les skills easyeda-api pour exporter le projet dans ./easyeda/, écraser ProPrj_ODB2-Scanner.epro2
 - Utiliser les skills easyeda-api pour exporter un png du schéma à la meilleure résolution dans ./images/Schematic.png
