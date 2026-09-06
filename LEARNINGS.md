@@ -285,4 +285,14 @@ if ($res.result.success -and $res.result.base64) {
 * **API de modification de fil :** `await eda.sch_PrimitiveWire.modify(wireId, { net: 'NET_NAME' })` permet d'attribuer directement le nom de net électrique à une liaison filaire.
 * **Fonctions stubs de `sch_PrimitiveAttribute` :** Dans la version actuelle de l'API embarquée, `eda.sch_PrimitiveAttribute.createNetLabel()` et `create()` sont des stubs vides (`async createNetLabel(t,i,n){}`). Pour modifier un label existant, utiliser `eda.sch_PrimitiveAttribute.modify(attrId, { value: 'NET_NAME' })`.
 
+---
+
+## [2026-09-06] Routage multicouche et topologie d'accès aux boîtiers SOIC-8
+
+* **Franchissement de bus d'alimentation multicouche :** Lorsqu'un bus d'alimentation vertical est distribué sur la face inférieure (`Bottom Layer`, ex. `3.3V` sur l'axe `x = 3050`), toute liaison sécante (ex. distribution `+5V`) doit impérativement traverser ce corridor sur la face supérieure (`Top Layer`) avant d'effectuer une transition par via vers la couche inférieure, évitant ainsi tout conflit de dégagement ("Track to Track" / "Safe Spacing").
+* **Topologie d'approche des boîtiers SOIC-8 (Transceivers CAN / K-Line) :**
+  * Les broches SMD intermédiaires d'un boîtier SOIC-8 (pas standard 50 mil / 1.27 mm) ne peuvent pas être abordées horizontalement sur la même face sous peine d'intercepter les pastilles voisines.
+  * **Règle géométrique d'accès :** L'accès doit s'effectuer soit verticalement (droit depuis le haut ou le bas sur la couche composant), soit en approchant par la couche opposée (`Bottom Layer`) jusqu'à un via situé dans l'alignement de la pastille cible à une distance de sécurité (> 25 mil du bord de pastille), avant de remonter directement en ligne droite.
+
+
 

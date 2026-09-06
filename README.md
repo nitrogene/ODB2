@@ -410,12 +410,15 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Prochaine action à exécuter : Routage de l'étage Régulation 3.3V (`LDL1117S33R` / `U5`) et distribution**
+> **Prochaine action à exécuter : Routage des Signaux de Communication (K-Line et Bus CAN)**
 >
-> 1. **Sortie régulée LDO (`VOUT` / `Tab 4`) :** Liaison vers la perle de ferrite `FB1(1)` pour le filtrage HF.
-> 2. **Filtrage de sortie 3.3V :** Raccordement de `FB1(2)` au condensateur réservoir `C6` (1 µF).
-> 3. **Distribution du rail 3.3V :** Distribution propre vers le réseau de condensateurs de découplage `C1` à `C4` (100 nF), l'alimentation principale de l'ESP32 `U1(2)`, et les alimentations logiques `U2(5)` (`VIO`) et `U3(3)` (`VCC`).
-> 4. **Liaison résiduelle 5V CAN :** Raccordement de la broche 3 (`VCC`) de `U2` au bus 5V.
+> 1. **Ligne K-Line (`U3` - `L9637D013TR`) :**
+>    * Liaison UART RX : Broche 1 (`RX`) de `U3` → `R2` (10 Ω) → Broche 4 (`IO4`) de l'ESP32 (`U1`).
+>    * Liaison UART TX : Broche 4 (`TX`) de `U3` → `R3` (10 Ω) → Broche 5 (`IO5`) de l'ESP32 (`U1`).
+>    * Ligne bidirectionnelle K-Line : Broche 6 (`K`) de `U3` vers broche 7 de la prise OBD-II.
+> 2. **Bus CAN (`U2` - `TJA1051T/3`) :**
+>    * Signaux logiques TWAI : `TXD` (`U2` broche 1 → ESP32 broche 37) et `RXD` (`U2` broche 4 → ESP32 broche 36).
+>    * Paire différentielle CAN : Broches 6 (`CANL`) et 7 (`CANH`) vers résistance de terminaison `R11` (120 Ω) et broches 14/6 de la prise OBD-II.
 
 ---
 
@@ -435,14 +438,14 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
   - [x] Condensateur de bootstrap `C5` (1 µF) entre broche 1 (`BOOT`) et broche 8 (`PH`) (piste 16 mil, 202 mil).
   - [x] Pont diviseur de feedback : `R12` (10 kΩ) et `R13` (1.91 kΩ) au plus près de la broche 5 (`VSENSE`) (piste 16 mil, 253 mil).
   - [x] Réseau de compensation : `R14` (10 kΩ) et `C9` (3.3 nF) au plus près de la broche 6 (`COMP`) (pistes 16 mil ultra-courtes de 130 mil et 63 mil).
-- [ ] **Étage Régulation 3.3V (`LDL1117S33R` / `U5`) :**
+- [x] **Étage Régulation 3.3V (`LDL1117S33R` / `U5`) :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
   - [x] Entrée `VIN` reliée au 5V (`L1` / `C8`).
-  - [ ] Sortie `VOUT` vers perle de ferrite `FB1` et condensateur de filtrage `C6` (1 µF).
-  - [ ] Distribution du rail 3.3V vers le réseau de découplage `C1` à `C4` (100 nF) puis broche 2 de l'ESP32 `U1`.
-  - [ ] Distribution 3.3V vers broche 5 (`VIO`) de `U2` et broche 3 (`VCC`) de `U3`.
-- [ ] **Alimentation 5V :**
+  - [x] Sortie `VOUT` vers perle de ferrite `FB1` et condensateur de filtrage `C6` (1 µF). *(Piste 30/24 mil via Bottom Layer et 2 vias 24/12 mil pour 3.3V_PRE, puis bus 3.3V descendant à C6(1))*
+  - [x] Distribution du rail 3.3V vers le réseau de découplage `C1` à `C4` (100 nF) puis broche 2 de l'ESP32 `U1`. *(Liaison Bottom Layer vers colonne C1-C4 et dérivation directe Top Layer 24 mil vers ESP32 U1_2)*
+  - [x] Distribution 3.3V vers broche 5 (`VIO`) de `U2` et broche 3 (`VCC`) de `U3`. *(Dérivation Top Layer directe vers U2_5 et dérivation Bottom Layer avec 2 vias 24/12 mil abordant U3_3 verticalement par le sud avec dégagement > 28 mil)*
+- [x] **Alimentation 5V :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
   - [x] Distribution du rail 5V vers broche 3 (`VIN`) de `U5` et résistance de contre-réaction `R12`.
-  - [ ] Distribution du rail 5V vers broche 3 (`VCC`) du transceiver CAN `U2`.
+  - [x] Distribution du rail 5V vers broche 3 (`VCC`) du transceiver CAN `U2`. *(Traversée Top Layer au-dessus du bus 3.3V, puis passage sous broches U2(1)-U2(2) via Bottom Layer et remontée verticale Top Layer dans U2_3)*
 
 ### 4.2 Routage des Signaux de Communication
 - [ ] **Ligne K-Line (`U3` - `L9637D013TR`) :**
@@ -600,3 +603,7 @@ En cohérence avec la checklist de routage de la Section 4 de ce document :
 - **Vérifier le DRC après chaque lot de pistes tracées** (`pcb_Drc`), pas seulement à la fin du projet, pour détecter les courts-circuits ou chevauchements au plus tôt.
 - **Sauvegarder ou versionner le fichier `.eprj2`** avant toute session de routage automatisé en masse — un script IA mal formulé peut modifier plusieurs pistes en une seule commande `execute`.
 - **Router en dernier les rails de puissance** (12V, 5V, 3.3V — voir §4.1) avec des largeurs de piste explicitement spécifiées à l'agent, les erreurs de largeur de piste sur ces rails étant plus difficiles à repérer visuellement qu'un DRC de court-circuit.
+
+## 7. Architecture logicielle
+
+(TODO)
