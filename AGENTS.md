@@ -42,6 +42,7 @@ Cette checklist est le socle commun utilisé avant de démarrer une feature et p
 Ces étapes sont séquentielles et bloquantes : si une étape échoue, ne pas exécuter les étapes suivantes et signaler l'échec à l'utilisateur.
 
 - Voir s'il est nécessaire d'enrichir LEARNINGS.md
+- Mettre à jour la section "Prochaine Étape Immédiate" du README.md
 - Utiliser les skills easyeda-api pour exporter le projet dans ./easyeda/, écraser ProPrj_ODB2-Scanner.epro2
 - Utiliser les skills easyeda-api pour exporter un png du schéma à la meilleure résolution dans ./images/Schematic.png
 - Utiliser les skills easyeda-api pour exporter un png du PCB à la meilleure résolution dans ./images/PCB.png

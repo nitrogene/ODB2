@@ -277,3 +277,12 @@ if ($res.result.success -and $res.result.base64) {
   ```
 * **Résultat :** La fermeture/réouverture force la destruction et la reconstruction complète du contexte WebGL et le rechargement propre des données depuis le stockage, répercutant immédiatement les nouveaux noms de nets sur tout le canvas.
 
+---
+
+## [2026-09-06] Schématique : Fusion automatique des fils (`Wire Merging`) et assignation de net
+
+* **Fusion automatique de polylignes :** Dans le schéma EasyEDA Pro, dès que deux segments de fil (`sch_PrimitiveWire`) se touchent ou s'intersectent sur la grille, le compilateur les fusionne automatiquement en une seule entité polyline. Il faut veiller à ne pas faire transiter un fil d'alimentation brute (`+12V_FUSED`) à proximité immédiate d'un fil de sortie protégée (`+12V_PROT`) sous peine de court-circuiter le composant série (transistor de protection `Q1`).
+* **API de modification de fil :** `await eda.sch_PrimitiveWire.modify(wireId, { net: 'NET_NAME' })` permet d'attribuer directement le nom de net électrique à une liaison filaire.
+* **Fonctions stubs de `sch_PrimitiveAttribute` :** Dans la version actuelle de l'API embarquée, `eda.sch_PrimitiveAttribute.createNetLabel()` et `create()` sont des stubs vides (`async createNetLabel(t,i,n){}`). Pour modifier un label existant, utiliser `eda.sch_PrimitiveAttribute.modify(attrId, { value: 'NET_NAME' })`.
+
+
