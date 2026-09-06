@@ -111,13 +111,12 @@ Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Prochaine action à exécuter : Routage des pistes de puissance et signaux de l'étage Buck (12V → 5V)**
+> **Prochaine action à exécuter : Routage de l'étage Régulation 3.3V (`LDL1117S33R` / `U5`) et distribution**
 >
-> 1. **Alimentation d'entrée 12V Buck (`VIN`) :** Piste large depuis la sortie de protection `Q1(3)` vers le condensateur réservoir `C7` et la broche 2 de `U4`.
-> 2. **Boucle de commutation critique (`PH`) :** Piste large (35 mil) reliant la broche 8 de `U4`, la cathode de `D2` et l'inductance `L1`. Raccordement bootstrap vers `C5(1)`.
-> 3. **Ligne Bootstrap (`BOOT`) :** Liaison directe entre `U4(1)` et `C5(2)`.
-> 4. **Sortie et distribution 5V :** Piste large depuis `L1(2)` vers `C8(1)`, l'entrée du LDO `U5(3)` et la polarisation haute `R12(2)`.
-> 5. **Signaux de contrôle :** Routage court et protégé de `VSENSE` (`U4.5` vers `R12`/`R13`) et `COMP` (`U4.6` vers `R14`/`C9`).
+> 1. **Sortie régulée LDO (`VOUT` / `Tab 4`) :** Liaison vers la perle de ferrite `FB1(1)` pour le filtrage HF.
+> 2. **Filtrage de sortie 3.3V :** Raccordement de `FB1(2)` au condensateur réservoir `C6` (1 µF).
+> 3. **Distribution du rail 3.3V :** Distribution propre vers le réseau de condensateurs de découplage `C1` à `C4` (100 nF), l'alimentation principale de l'ESP32 `U1(2)`, et les alimentations logiques `U2(5)` (`VIO`) et `U3(3)` (`VCC`).
+> 4. **Liaison résiduelle 5V CAN :** Raccordement de la broche 3 (`VCC`) de `U2` au bus 5V.
 
 ---
 
@@ -130,20 +129,21 @@ Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
 - [x] **Synchronisation & Placement Buck :**
   - [x] Exécuter « Update PCB from Schematic » pour importer `R12`, `R13`, `R14`, `C9` et les nouveaux chevelus nets sur le PCB.
   - [x] Placer `D2`, `C8`, `R12`, `R13`, `R14`, `C9` sur le PCB selon les règles de minimisation des boucles d'induction et de bruit.
-- [ ] **Routage Étage Buck 12V → 5V (`TPS54331DR` / `U4`) :**
-  - [ ] Boucle de commutation courte et large : `U4` (broche 8 PH), inductance `L1` (10 µH) et diode Schottky `D2` (`SS34` : cathode sur PH, anode sur GND).
-  - [ ] Condensateur d'entrée `C7` (22 µF) au plus près de la broche 2 (`VIN`) de `U4`.
-  - [ ] Condensateur de sortie `C8` (22 µF) en dérivation juste après `L1` (vers le plan GND).
-  - [ ] Condensateur de bootstrap `C5` (1 µF) entre broche 1 (`BOOT`) et broche 8 (`PH`).
-  - [ ] Pont diviseur de feedback : `R12` (10 kΩ) et `R13` (1.91 kΩ) au plus près de la broche 5 (`VSENSE`).
-  - [ ] Réseau de compensation : `R14` (10 kΩ) et `C9` (3.3 nF) au plus près de la broche 6 (`COMP`).
+- [x] **Routage Étage Buck 12V → 5V (`TPS54331DR` / `U4`) :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
+  - [x] Boucle de commutation courte et large : `U4` (broche 8 PH), inductance `L1` (10 µH) et diode Schottky `D2` (`SS34` : cathode sur PH, anode sur GND) (pistes de 32-35 mil sur Top Layer, longueur totale 843 mil).
+  - [x] Condensateur d'entrée `C7` (22 µF) au plus près de la broche 2 (`VIN`) de `U4` et liaison 12V protégée depuis `Q1(3)` (piste large 32 mil, 818 mil).
+  - [x] Condensateur de sortie `C8` (22 µF) et distribution du rail 5V vers `U5(3)` et `R12(2)` (piste 32 mil / 18 mil, 1309 mil).
+  - [x] Condensateur de bootstrap `C5` (1 µF) entre broche 1 (`BOOT`) et broche 8 (`PH`) (piste 16 mil, 202 mil).
+  - [x] Pont diviseur de feedback : `R12` (10 kΩ) et `R13` (1.91 kΩ) au plus près de la broche 5 (`VSENSE`) (piste 16 mil, 253 mil).
+  - [x] Réseau de compensation : `R14` (10 kΩ) et `C9` (3.3 nF) au plus près de la broche 6 (`COMP`) (pistes 16 mil ultra-courtes de 130 mil et 63 mil).
 - [ ] **Étage Régulation 3.3V (`LDL1117S33R` / `U5`) :**
-  - [ ] Entrée `VIN` reliée au 5V (`L1` / `C8`).
+  - [x] Entrée `VIN` reliée au 5V (`L1` / `C8`).
   - [ ] Sortie `VOUT` vers perle de ferrite `FB1` et condensateur de filtrage `C6` (1 µF).
   - [ ] Distribution du rail 3.3V vers le réseau de découplage `C1` à `C4` (100 nF) puis broche 2 de l'ESP32 `U1`.
   - [ ] Distribution 3.3V vers broche 5 (`VIO`) de `U2` et broche 3 (`VCC`) de `U3`.
 - [ ] **Alimentation 5V :**
-  - [ ] Distribution du rail 5V vers broche 3 (`VIN`) de `U5`, broche 3 (`VCC`) du transceiver CAN `U2` et résistance de contre-réaction `R12`.
+  - [x] Distribution du rail 5V vers broche 3 (`VIN`) de `U5` et résistance de contre-réaction `R12`.
+  - [ ] Distribution du rail 5V vers broche 3 (`VCC`) du transceiver CAN `U2`.
 
 ### 4.2 Routage des Signaux de Communication
 - [ ] **Ligne K-Line (`U3` - `L9637D013TR`) :**

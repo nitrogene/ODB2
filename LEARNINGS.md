@@ -174,14 +174,20 @@ if ($res.result.success -and $res.result.base64) {
 
 ---
 
-## [2026-09-05] Exportation haute résolution native du schéma (`PNG`)
+## [2026-09-05] Exportation haute résolution du schéma (`PNG`)
 
-* **API :** `eda.sch_ManufactureData.getPngFile(fileName, resolution)`
-* **Avantage :** Contrairement à la capture d'écran du viewport canvas (qui dépend du niveau de zoom de l'utilisateur), cette méthode exporte directement la planche schématique complète avec cartouche, cadre et résolution vectorielle propre :
+* **API :** `eda.dmt_EditorControl.zoomToAllPrimitives()` puis `eda.dmt_EditorControl.getCurrentRenderedAreaImage(doc.tabId)`
+* **Fonctionnement :**
   ```javascript
-  const pngFile = await eda.sch_ManufactureData.getPngFile('Schematic');
+  await eda.dmt_EditorControl.openDocument(schPageUuid);
+  await new Promise(r => setTimeout(r, 600));
+  const doc = await eda.dmt_SelectControl.getCurrentDocumentInfo();
+  await eda.dmt_EditorControl.zoomToAllPrimitives();
+  await new Promise(r => setTimeout(r, 400));
+  const pngBlob = await eda.dmt_EditorControl.getCurrentRenderedAreaImage(doc.tabId);
   // Lecture du blob via FileReader (base64) pour écriture sur le disque
   ```
+
 
 ---
 
@@ -203,3 +209,29 @@ if ($res.result.success -and $res.result.base64) {
 * **Comportement :** Renvoie un booléen immédiat :
   * `true` : Aucun conflit DRC détecté (règles de dégagement, chevauchements et continuité respectées).
   * `false` : Présence de violations DRC (ex. discordance de nom de net entre pastille et piste, ou distance d'isolement insuffisante).
+
+---
+
+## [2026-09-06] Diagnostic approfondi des violations DRC (`includeVerboseError`)
+
+* **API :** `await eda.pcb_Drc.check(true, false, true)`
+* **Fonctionnement :** Le troisième paramètre `includeVerboseError = true` retourne la liste exhaustive des violations catégorisées (Clearance Error, Connection Error, Netlist Error) avec tous les détails géométriques :
+  * Types et identifiants des objets incriminés (`obj1`, `obj2`, `objs`).
+  * Coordonnées précises du conflit (`pos: { x, y }`).
+  * Distances mesurées vs règles d'isolement requises (`minDistance`, `shouldBe`).
+* **Utilité :** Permet à l'agent d'identifier et corriger précisément au mil près les violations d'isolement (ex. distance piste-pastille) sans intervention humaine.
+
+---
+
+## [2026-09-06] Réaffectation directe du réseau d'une pastille (`Pad Net`)
+
+* **API directe :** `await eda.pcb_PrimitivePad.modify(primitiveId, { net: 'NOUVEAU_NET' })`
+* **Contexte :** Permet de réconcilier ou forcer l'attribution de réseau sur une pastille PCB sans devoir refaire un import complet du schéma lorsque des incohérences mineures de synchronisation bloquent le DRC.
+
+---
+
+## [2026-09-06] Suppression ciblée de pistes (`PrimitiveLine`)
+
+* **API :** `await eda.pcb_PrimitiveLine.delete([primitiveId1, primitiveId2, ...])`
+* **Fonctionnement :** Supprime immédiatement les segments de ligne spécifiés par leur identifiant primitif (`primitiveId`), facilitant les ajustements de tracé et le ré-routage propre.
+
