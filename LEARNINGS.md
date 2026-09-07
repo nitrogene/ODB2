@@ -294,5 +294,23 @@ if ($res.result.success -and $res.result.base64) {
   * Les broches SMD intermédiaires d'un boîtier SOIC-8 (pas standard 50 mil / 1.27 mm) ne peuvent pas être abordées horizontalement sur la même face sous peine d'intercepter les pastilles voisines.
   * **Règle géométrique d'accès :** L'accès doit s'effectuer soit verticalement (droit depuis le haut ou le bas sur la couche composant), soit en approchant par la couche opposée (`Bottom Layer`) jusqu'à un via situé dans l'alignement de la pastille cible à une distance de sécurité (> 25 mil du bord de pastille), avant de remonter directement en ligne droite.
 
+---
 
+## [2026-09-07] Schématique : Création programmatique de ports de réseau (`NetPort`)
 
+* **Contournement des stubs `createNetLabel` :** L'API `eda.sch_PrimitiveAttribute.createNetLabel()` étant un stub vide dans le runtime EasyEDA Pro actuel, la création de ports de réseau via `eda.sch_PrimitiveComponent.createNetPort(direction, net, x, y, rotation, mirror)` est pleinement fonctionnelle et opérationnelle.
+* **Connexion au schéma :** Le port de réseau dispose d'une broche électrique interne (au point d'insertion selon la rotation) qui connecte immédiatement tout fil (`Wire`) superposé ou adjacent et propage le net dans le compilateur de netlist EasyEDA sans nécessiter d'intervention manuelle.
+
+---
+
+## [2026-09-07] PCB : Invalidation de l'arbre de connectivité cuivre lors des modifications in-place (`modify` vs `create`)
+
+* **Problème découvert :** Modifier directement l'attribut `net` de pistes ou vias existants via `eda.pcb_PrimitiveLine.modify(id, { net })` ou `eda.pcb_PrimitiveVia.modify(id, { net })` met à jour la propriété dans la base de données, mais le moteur de calcul DRC ne reconstruit pas toujours le graphe de continuité cuivre. Il en résulte de fausses alertes d'isolement DRC ("Track to Via distance is 0mm, should be >= 0.176mm") entre des éléments portant pourtant le même nom de net.
+* **Solution robuste :** Pour réassigner un tracé existant vers un nouveau net, supprimer les primitives incriminées (`pcb_PrimitiveLine.delete()`, `pcb_PrimitiveVia.delete()`) et les recréer avec `create(net, ...)` garantit leur insertion immédiate dans l'arbre spatial du nouveau réseau, assurant un DRC à 0 erreur d'isolement.
+
+---
+
+## [2026-09-07] Exportation d'images haute résolution contrôlée via le contexte Canvas 2D
+
+* **Spécificités runtime :** `eda.sch_ManufactureData.getPngFile()` n'est pas exposé dans tous les environnements desktop et `getExportDocumentFile()` requiert une validation modale bloquante.
+* **Méthode d'export exacte :** Utiliser `eda.dmt_EditorControl.getCurrentRenderedAreaImage(doc.tabId)` pour obtenir le flux graphique brut rendu, puis projeter l'image dans un élément `<canvas>` dimensionné aux résolutions requises (ex. `2274 × 1236 px` pour le schéma, `1137 × 642 px` pour le PCB) avec `imageSmoothingQuality = 'high'` avant l'encodage PNG Base64. Cela garantit un respect strict et reproductible des dimensions sans dépendre de la taille de fenêtre du client.
