@@ -44,8 +44,8 @@ Ces étapes sont séquentielles et bloquantes : si une étape échoue, ne pas ex
 - Voir s'il est nécessaire d'enrichir LEARNINGS.md
 - Mettre à jour la section "Prochaine Étape Immédiate" du README.md
 - Utiliser les skills easyeda-api pour exporter le projet dans ./easyeda/, écraser ProPrj_ODB2-Scanner.epro2
-- Utiliser les skills easyeda-api pour exporter un png du schéma à la meilleure résolution dans ./images/Schematic.png
-- Utiliser les skills easyeda-api pour exporter un png du PCB à la meilleure résolution dans ./images/PCB.png
+- Utiliser les skills easyeda-api pour exporter un png du schéma en résolution 2274 × 1236 px (largeur 2274 px, soit 2× par rapport aux 1137 × 618 px par défaut) dans ./images/Schematic.png
+- Utiliser les skills easyeda-api pour exporter un png du PCB en résolution 1137 × 642 px (résolution par défaut) dans ./images/PCB.png
 - Faire un git add ., et proposer un message de commit
 - Une fois le message de commit validé explicitement par l'utilisateur, faire le commit puis le push
 - Vérifier que le projet est revenu dans son état de référence (DRC + exports + `git status` vide)
