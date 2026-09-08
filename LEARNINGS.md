@@ -314,3 +314,20 @@ if ($res.result.success -and $res.result.base64) {
 
 * **Spécificités runtime :** `eda.sch_ManufactureData.getPngFile()` n'est pas exposé dans tous les environnements desktop et `getExportDocumentFile()` requiert une validation modale bloquante.
 * **Méthode d'export exacte :** Utiliser `eda.dmt_EditorControl.getCurrentRenderedAreaImage(doc.tabId)` pour obtenir le flux graphique brut rendu, puis projeter l'image dans un élément `<canvas>` dimensionné aux résolutions requises (ex. `2274 × 1236 px` pour le schéma, `1137 × 642 px` pour le PCB) avec `imageSmoothingQuality = 'high'` avant l'encodage PNG Base64. Cela garantit un respect strict et reproductible des dimensions sans dépendre de la taille de fenêtre du client.
+
+---
+
+## [2026-09-08] Contour de carte (`pcb_PrimitivePolyline`) et règles de dégagement
+
+* **Lecture de la géométrie du contour :** Le contour de carte (Board Outline) est stocké sous la forme d'un objet `eda.pcb_PrimitivePolyline` sur la couche 11 (`EPCB_LayerId.BOARD_OUTLINE`).
+* Sa géométrie est accessible via la méthode `poly.getState_Polygon()`, qui renvoie un descripteur géométrique standard, par exemple `["R", x, y, width, height, 0, 0]` pour un contour rectangulaire :
+  * Dans ce projet : `["R", 1850, 50, 2600, 1250, 0, 0]`, ce qui correspond à une emprise physique de x dans [1850, 4450] (largeur 2600 mil = 66.04 mm) et y dans [-1200, 50] (hauteur 1250 mil = 31.75 mm).
+* **Règle DRC de bordure :** La règle `Board Outline to Track` impose une distance d'isolement stricte de **0.300 mm (11.8 mil)**. Tout tracé ou via doit impérativement respecter cette marge par rapport aux 4 arêtes du contour.
+
+---
+
+## [2026-09-08] Connectivité pastille SMD vs Via traversant (Via-in-Pad et raccordement)
+
+* **Comportement découvert :** Placer un via traversant (`pcb_PrimitiveVia.create()`) exactement aux coordonnées centrales d'une pastille CMS / SMD (`pcb_PrimitivePad`) de même nom de réseau peut ne pas être reconnu comme connecté par le vérificateur DRC si aucun segment de piste (`pcb_PrimitiveLine`) sur la couche de la pastille (couche 1 pour le Top) n'est rattaché physiquement au centre du via.
+* **Solution robuste :** Décaler légèrement le via à l'extérieur de la pastille SMD (ex. à 25-30 mil de distance) et tracer explicitement un court segment de piste sur la couche du composant reliant le via à la pastille. Ce tracé assure une topologie claire dans le graphe de connectivité cuivre et élimine toute fausse détection de discontinuité.
+

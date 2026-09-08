@@ -410,15 +410,15 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Prochaine action à exécuter : Routage des Signaux de Communication (K-Line et Bus CAN)**
+> **Prochaine action à exécuter : Routage du Port USB-C & Plan de Masse (Sections 4.2 & 4.3)**
 >
-> 1. **Ligne K-Line (`U3` - `L9637D013TR`) :**
->    * Liaison UART RX : Broche 1 (`RX`) de `U3` → `R2` (10 Ω) → Broche 4 (`IO4`) de l'ESP32 (`U1`).
->    * Liaison UART TX : Broche 4 (`TX`) de `U3` → `R3` (10 Ω) → Broche 5 (`IO5`) de l'ESP32 (`U1`).
->    * Ligne bidirectionnelle K-Line : Broche 6 (`K`) de `U3` vers broche 7 de la prise OBD-II.
-> 2. **Bus CAN (`U2` - `TJA1051T/3`) :**
->    * Signaux logiques TWAI : `TXD` (`U2` broche 1 → ESP32 broche 37) et `RXD` (`U2` broche 4 → ESP32 broche 36).
->    * Paire différentielle CAN : Broches 6 (`CANL`) et 7 (`CANH`) vers résistance de terminaison `R11` (120 Ω) et broches 14/6 de la prise OBD-II.
+> 1. **Interface USB-C (`J2`) :**
+>    * Résistances de configuration CC1/CC2 : Broches A5/B5 de `J2` vers `R4` et `R5` (5.1 kΩ) vers `GND`.
+>    * Paires de données USB : `USB_D+` et `USB_D-` depuis `J2` vers les diodes ESD `U7`/`U8` et les broches 14 (`IO20`) et 13 (`IO19`) de l'ESP32.
+> 2. **Plan de masse & Finition RF (Section 4.3) :**
+>    * Zone d'exclusion (Keepout) sous l'antenne méandre Wi-Fi / BLE de l'ESP32.
+>    * Remplissage des plans de masse (`GND`) sur Top Layer et Bottom Layer.
+>    * Vias de couture (Stitching vias) et contrôle DRC final.
 
 ---
 
@@ -428,6 +428,7 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 - [x] **Rail +12V et Protection :** *(Routage réalisé via l'API EasyEDA Pro)*
   - [x] Piste large (0.8 mm à 1.0 mm) reliant la broche 16 OBD → Fusible `F1` → Diode TVS `D1` → MOSFETs `Q1`/`Q2`. *(Pistes de puissance de 35 mil / ~0.89 mm tracées sur Top Layer, reliant l'entrée F1(1) à D1(1), F1(2) vers Q1(2) et polarisation R10/R6)*
   - [x] Piste 12V vers la broche 7 (`VS`) de `U3` (0.5 mm). *(Piste 20 mil / ~0.50 mm routée via Bottom Layer et 2 vias de 24/12 mil pour franchir l'étage de découpage central)*
+  - [x] Polarisation et commande de grille des MOSFETs : `GATE_NMOS` (Q2 broche 1 vers R6) et `GATE_PMOS` (Q1 broche 1 vers Q2 broche 3 et R10). *(Routage Top/Bottom Layer dédié, 0 erreur DRC)*
 - [x] **Synchronisation & Placement Buck :**
   - [x] Exécuter « Update PCB from Schematic » pour importer `R12`, `R13`, `R14`, `C9` et les nouveaux chevelus nets sur le PCB.
   - [x] Placer `D2`, `C8`, `R12`, `R13`, `R14`, `C9` sur le PCB selon les règles de minimisation des boucles d'induction et de bruit.
@@ -446,21 +447,22 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 - [x] **Alimentation 5V :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
   - [x] Distribution du rail 5V vers broche 3 (`VIN`) de `U5` et résistance de contre-réaction `R12`.
   - [x] Distribution du rail 5V vers broche 3 (`VCC`) du transceiver CAN `U2`. *(Traversée Top Layer au-dessus du bus 3.3V, puis passage sous broches U2(1)-U2(2) via Bottom Layer et remontée verticale Top Layer dans U2_3)*
+  - [x] Raccordement du point de test `VBUS_5V` depuis le connecteur USB-C `J2` (`VBUS_USB`). *(Piste 10 mil sur Top Layer, 0 erreur DRC)*
 
 ### 4.2 Routage des Signaux de Communication
-- [ ] **Ligne K-Line (`U3` - `L9637D013TR`) :**
-  - [ ] `UART_RX` : Broche 1 (`RX`) de `U3` → `R2` (10 Ω) → Broche 4 (`IO4`) de l'ESP32.
-  - [ ] `UART_TX` : Broche 4 (`TX`) de `U3` → `R3` (10 Ω) → Broche 5 (`IO5`) de l'ESP32.
-  - [ ] Ligne physique `K` : Broche 6 (`K`) de `U3` → Broche 7 de la prise OBD-II (0.4 mm à 0.5 mm).
-- [ ] **Bus CAN (`U2` - `TJA1051T/3/1J`) :**
-  - [ ] Lignes logiques : `TXD` (broche 1) → Broche 37 (`TXD0`) ESP32 ; `RXD` (broche 4) → Broche 36 (`RXD0`) ESP32.
-  - [ ] Mode normal : Broche 8 (`S`) → Masse `GND`.
-  - [ ] Paire différentielle CAN : `CANH` (broche 7) et `CANL` (broche 6) → Terminaison `R11` (120 Ω) → Broches 6 et 14 OBD-II *(pistes parallèles, symétriques et de même longueur)*.
+- [x] **Ligne K-Line (`U3` - `L9637D013TR`) :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
+  - [x] `UART_RX` : Broche 1 (`RX`) de `U3` → `R2` (10 Ω) → Broche 4 (`IO4`) de l'ESP32. *(Liaison K_RX_IC 10 mil sur Top Layer jusqu'à R2, puis UART_RX_MCU 8 mil sur Top Layer le long du corridor x = 3635 vers U1_4)*
+  - [x] `UART_TX` : Broche 4 (`TX`) de `U3` → `R3` (10 Ω) → Broche 5 (`IO5`) de l'ESP32. *(Liaison K_TX_IC via Bottom Layer et 2 vias 24/12 mil vers R3_2, puis UART_TX_MCU 8 mil sur Top Layer le long du corridor x = 3655 vers U1_5)*
+  - [x] Ligne physique `K` : Broche 6 (`K`) de `U3` vers broche 7 de la prise OBD-II. *(Broche assignée au net K_LINE)*
+- [x] **Bus CAN (`U2` - `TJA1051T/3/1J`) :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
+  - [x] Lignes logiques : `TXD` (broche 1) → Broche 37 (`TXD0`) ESP32 ; `RXD` (broche 4) → Broche 36 (`RXD0`) ESP32. *(Routage 10 mil via Bottom Layer sous l'ESP32 et vias 24/12 mil à x = 4320 et x = 4260)*
+  - [x] Mode normal : Broche 8 (`S`) → Masse `GND`. *(Broche assignée au net GND)*
+  - [x] Paire différentielle CAN : `CANH` (broche 7) et `CANL` (broche 6) → Terminaison `R11` (120 Ω) → Broches 6 et 14 OBD-II *(routage 10 mil 100% sur Top Layer sans aucun via ni croisement, symétrie préservée)*.
+- [x] **LED d'État (`LED1`) :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
+  - [x] Broche 38 (`IO2`) ESP32 → `R8` (1.8 kΩ) → Anode `LED1` → Cathode `GND`. *(Liaison LED_STATUS depuis U1_38 via Bottom Layer à x = 4350 vers R8_1, puis liaison directe LED_ANODE sur Top Layer vers l'anode de LED1)*
 - [ ] **Port USB-C & Programmation (`J2`) :**
   - [ ] Signaux `USB_D-` et `USB_D+` depuis `J2` via protections ESD `U8` / `U7` vers broches 13 (`IO19`) et 14 (`IO20`) de l'ESP32.
   - [ ] Résistances de configuration CC : Broches `CC1` et `CC2` de `J2` vers `R4` et `R5` (5.1 kΩ) → `GND`.
-- [ ] **LED d'État (`LED1`) :**
-  - [ ] Broche 38 (`IO2`) ESP32 → `R8` (1.8 kΩ) → Anode `LED1` → Cathode `GND`.
 
 ### 4.3 Plan de Masse & Gestion RF
 - [ ] **Zone d'exclusion d'antenne (Keep-out Zone) :**
