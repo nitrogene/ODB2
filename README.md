@@ -410,15 +410,15 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Prochaine action à exécuter : Routage du Port USB-C & Plan de Masse (Sections 4.2 & 4.3)**
+> **Prochaine action à exécuter : Plan de Masse & Gestion RF (Section 4.3)**
 >
-> 1. **Interface USB-C (`J2`) :**
->    * Résistances de configuration CC1/CC2 : Broches A5/B5 de `J2` vers `R4` et `R5` (5.1 kΩ) vers `GND`.
->    * Paires de données USB : `USB_D+` et `USB_D-` depuis `J2` vers les diodes ESD `U7`/`U8` et les broches 14 (`IO20`) et 13 (`IO19`) de l'ESP32.
-> 2. **Plan de masse & Finition RF (Section 4.3) :**
->    * Zone d'exclusion (Keepout) sous l'antenne méandre Wi-Fi / BLE de l'ESP32.
->    * Remplissage des plans de masse (`GND`) sur Top Layer et Bottom Layer.
->    * Vias de couture (Stitching vias) et contrôle DRC final.
+> 1. **Zone d'exclusion RF (Keepout d'antenne) :**
+>    * Définir une zone d'exclusion de plan de cuivre (`NO_POURS` / `NO_FILLS`) sur toutes les couches sous l'antenne méandre 2.4 GHz de l'ESP32 (`U1`) dans le coin supérieur droit (`x ∈ [3850, 4450], y ∈ [-220, 50]`).
+> 2. **Plans de masse (`GND`) :**
+>    * Couler le plan de masse sur **Top Layer** (Layer 1) et sur **Bottom Layer** (Layer 2) avec remplissage Solid et dégagement thermique.
+> 3. **Vias de couture (Stitching Vias) & Contrôle DRC :**
+>    * Disposer des vias de couture sous le pad thermique de l'ESP32, autour des blocs de découpage et le long du contour de carte pour interconnecter les plans de masse.
+>    * Exécuter le DRC final et valider 0 erreur d'isolement et 0 discontinuité.
 
 ---
 
@@ -460,12 +460,15 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
   - [x] Paire différentielle CAN : `CANH` (broche 7) et `CANL` (broche 6) → Terminaison `R11` (120 Ω) → Broches 6 et 14 OBD-II *(routage 10 mil 100% sur Top Layer sans aucun via ni croisement, symétrie préservée)*.
 - [x] **LED d'État (`LED1`) :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
   - [x] Broche 38 (`IO2`) ESP32 → `R8` (1.8 kΩ) → Anode `LED1` → Cathode `GND`. *(Liaison LED_STATUS depuis U1_38 via Bottom Layer à x = 4350 vers R8_1, puis liaison directe LED_ANODE sur Top Layer vers l'anode de LED1)*
-- [ ] **Port USB-C & Programmation (`J2`) :**
-  - [ ] Signaux `USB_D-` et `USB_D+` depuis `J2` via protections ESD `U8` / `U7` vers broches 13 (`IO19`) et 14 (`IO20`) de l'ESP32.
-  - [ ] Résistances de configuration CC : Broches `CC1` et `CC2` de `J2` vers `R4` et `R5` (5.1 kΩ) → `GND`.
+- [x] **Port USB-C & Programmation (`J2`) :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
+  - [x] Signaux `USB_D-` et `USB_D+` depuis `J2` via protections ESD `U8` / `U7` vers broches 13 (`IO19`) et 14 (`IO20`) de l'ESP32. *(Paire différentielle 8 mil / espacement 12 mil sur Top Layer passant par les diodes TVS U7/U8 pivotées à 270° au plus près de J2, puis corridor x = 3790/3810 jusqu'à U1_13 et U1_14)*
+  - [x] Résistances de configuration CC : Broches `CC1` et `CC2` de `J2` vers `R4` et `R5` (5.1 kΩ) → `GND`. *(Ligne USB_CC1 via autoroute nord puis pont multicouche Layer 1/2 vers R4_1 ; ligne USB_CC2 sur Bottom Layer avec pont Layer 1 au-dessus du rail 3.3V vers R5_1)*
+  - [x] Raccordement `VBUS_USB` : Pastilles d'alimentation A4B9 et A9B4 reliées à la diode D5. *(Liaison Top Layer 10 mil sur autoroute nord reliant A4B9, A9B4 et D5_1)*
+
 
 ### 4.3 Plan de Masse & Gestion RF
 - [ ] **Zone d'exclusion d'antenne (Keep-out Zone) :**
+  - [ ] **Définir le keepout AVANT de couler les plans GND** (sinon reprise manuelle du remplissage après coup).
   - [ ] Définir une zone `Copper Keepout` sur **toutes les couches (All Layers)** sous et autour de l'antenne méandre de l'ESP32 (coin supérieur droit).
   - [ ] Garantir l'absence totale de cuivre (aucun plan de masse ni piste) pour préserver les performances radio.
 - [ ] **Plans de masse (Copper Area) :**
@@ -473,12 +476,25 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
   - [ ] Plan `GND` sur **Bottom Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief).
 - [ ] **Vias de couture (Stitching Vias) :**
   - [ ] Vias de masse sous le pad thermique central de l'ESP32 (broches 41).
+  - [ ] Vérifier la densité de vias pour la **dissipation thermique**, pas seulement pour passer le DRC.
   - [ ] Vias de masse au niveau des condensateurs de découplage et du bloc de découpage `U4`/`D2`.
   - [ ] Vias de masse réguliers le long du contour de carte.
 
-### 4.4 Contrôles Finaux & Fabrication
+### 4.4 Contrôle Intermédiaire (post plan de masse)
 - [ ] **Contrôle DRC (Design Rule Check) :** Exécuter la vérification des règles de conception sous EasyEDA Pro (`Shift + R`) et corriger les erreurs éventuelles.
 - [ ] **Visualisation 3D :** Vérification visuelle globale de l'assemblage et du dégagement mécanique.
+
+### 4.5 Recherche d'optimisations du PCB
+- [ ] **Optimisations du PCB :** Analyser le PCB à la recherche d'optimisations: déplacer des composants pour améliorer les performances / la stabilité, pour raccourcir des pistes ou supprimer des vias. Découper en sous tâches de 4.6
+
+### 4.6 Implémentations des optimisations du PCB 
+
+### 4.7 Contrôle Final
+- [ ] **Silkscreen**: rajouter des informations sur le PCB pour délimiter des zones logiques (ie Alimentation). Decouper en sous tache de ce point
+- [ ] **Contrôle DRC final** après optimisations (vérifier qu'aucune reprise n'a cassé un clearance ou un thermal relief).
+- [ ] **Visualisation 3D finale**.
+
+### 4.8 Fabrication
 - [ ] **Export des fichiers de production :**
   - [ ] Fichiers Gerber & Perçage (Drill).
   - [ ] Fichier de nomenclature (BOM).

@@ -331,3 +331,15 @@ if ($res.result.success -and $res.result.base64) {
 * **Comportement découvert :** Placer un via traversant (`pcb_PrimitiveVia.create()`) exactement aux coordonnées centrales d'une pastille CMS / SMD (`pcb_PrimitivePad`) de même nom de réseau peut ne pas être reconnu comme connecté par le vérificateur DRC si aucun segment de piste (`pcb_PrimitiveLine`) sur la couche de la pastille (couche 1 pour le Top) n'est rattaché physiquement au centre du via.
 * **Solution robuste :** Décaler légèrement le via à l'extérieur de la pastille SMD (ex. à 25-30 mil de distance) et tracer explicitement un court segment de piste sur la couche du composant reliant le via à la pastille. Ce tracé assure une topologie claire dans le graphe de connectivité cuivre et élimine toute fausse détection de discontinuité.
 
+---
+
+## [2026-09-09] Routage USB-C : Paires différentielles, diodes ESD et ponts multicouches (Bridges)
+
+* **Orientation des diodes TVS ESD (`U7`, `U8`) au plus près de `J2` :**
+  * Positionner les diodes à 270° au plus près du connecteur USB-C (`y = -200`) place la pastille 1 (Signal) en haut (`y = -152.6 mil`) et la pastille 2 (`GND`) en bas (`y = -247.4 mil`).
+  * Cela permet aux pistes `USB_D+` et `USB_D-` d'accéder directement aux broches de protection sans créer de boucle inductive ("stub"), puis de filer vers le corridor intérieur libre de l'ESP32 (`x = [3790, 3810]`) sur le Top Layer jusqu'aux broches IO20 et IO19 avec 0 erreur DRC.
+* **Franchissement multicouche par pont (Bridge) pour les lignes de configuration CC :**
+  * Lorsque deux signaux transversaux sur la couche inférieure (`USB_CC1` et `USB_CC2`) doivent croiser un bus d'alimentation transversal (`3.3V` à `y = -300`) ou une piste sécante (`USB_CC2` à `x = 3230`), l'insertion d'un pont de 30-40 mil sur la couche opposée (Top Layer) via 2 vias (perçage 12 mil, diamètre 20 mil) permet d'éliminer tout conflit d'isolement sans devoir re-router les bus d'alimentation.
+* **Autoroute de contournement nord du connecteur USB-C :**
+  * Entre les pastilles de blindage métallisées de `J2` (`y = 6.3`) et le bord supérieur de carte (`y = 50 mil`), la marge physique est étroite (dégagement au contour >= 11.8 mil, dégagement à la pastille >= 6.0 mil). Une piste de 5 mil de large centrée à `y = 34.5 mil` satisfait rigoureusement les deux contraintes avec une marge de sécurité (> 12.5 mil vers le bord, > 6.0 mil vers la pastille).
+

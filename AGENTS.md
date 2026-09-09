@@ -6,11 +6,12 @@
 - Ne jamais modifier les répertoires externes ou le profil utilisateur.
 - Ne jamais modifier le contenu du répertoire [`.agents/skills/easyeda-api`](file:///D:/Dev/ODB/.agents/skills/easyeda-api).
 
-## Obtention d'informations sur l'état du projet dans EasyEdaPro
+## Intéractions avec EasyEdaPro
 
 - Privilégier les skills easyeda-api, ne pas utiliser directement le serveur http://localhost:49620, sauf pour faire curl http://localhost:49620/health
 - Ne jamais utiliser .\easyeda\ProPrj_ODB2-Scanner.epro2. Ce fichier est exclusivement modifié lors des "Étapes post validation d'une feature"
 - Il est possible de demander un export png du schéma dans .\images\Schematic.png, du pcb dans .\images\PCB.png, si c'est plus simple pour obtenir des informations visuelles
+- Ne pas hésiter à me demander de l'aide en cas de difficultés, pour par exempke déplacer des composants
 
 ## Documentation du schéma
 
@@ -32,6 +33,7 @@ Cette checklist est le socle commun utilisé avant de démarrer une feature et p
 
 - Vérifier que le projet est dans son état de référence (voir section ci-dessus).
 - Si un point de la checklist n'est pas respecté, le signaler à l'utilisateur et ne pas démarrer la feature tant que ce n'est pas résolu.
+- Lire LEARNINGS.md afin de ne pas résoudre un problème déjà résolu
 
 ## Capitalisation des découvertes API
 
