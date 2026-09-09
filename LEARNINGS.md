@@ -343,3 +343,11 @@ if ($res.result.success -and $res.result.base64) {
 * **Autoroute de contournement nord du connecteur USB-C :**
   * Entre les pastilles de blindage métallisées de `J2` (`y = 6.3`) et le bord supérieur de carte (`y = 50 mil`), la marge physique est étroite (dégagement au contour >= 11.8 mil, dégagement à la pastille >= 6.0 mil). Une piste de 5 mil de large centrée à `y = 34.5 mil` satisfait rigoureusement les deux contraintes avec une marge de sécurité (> 12.5 mil vers le bord, > 6.0 mil vers la pastille).
 
+---
+
+## [2026-09-09] Limite de résolution de la capture d'écran API (`getCurrentRenderedAreaImage`) vs Export UI natif
+
+* **Problème identifié :** L'API `eda.dmt_EditorControl.getCurrentRenderedAreaImage()` capture uniquement le viewport du navigateur (environ 1631 × 618 px). Pour une feuille de schéma complète (format A4), les textes des composants ne mesurent que 3 à 4 pixels. Ré-étirer ce canvas en 2274 × 1236 px ne fait qu'agrandir les pixels sans ajouter de détail vectoriel, rendant le schéma illisible au zoom.
+* **Solution retenue :** L'export d'images haute définition pour la documentation (`images/Schematic.png` et `images/PCB.png`) est confié à l'utilisateur via le menu natif de l'interface EasyEDA Pro (**Fichier > Exporter > Image / PDF** à 300 DPI ou largeur 4096 px), garantissant une netteté vectorielle irréprochable.
+
+

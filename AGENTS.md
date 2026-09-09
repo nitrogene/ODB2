@@ -10,7 +10,7 @@
 
 - Privilégier les skills easyeda-api, ne pas utiliser directement le serveur http://localhost:49620, sauf pour faire curl http://localhost:49620/health
 - Ne jamais utiliser .\easyeda\ProPrj_ODB2-Scanner.epro2. Ce fichier est exclusivement modifié lors des "Étapes post validation d'une feature"
-- Il est possible de demander un export png du schéma dans .\images\Schematic.png, du pcb dans .\images\PCB.png, si c'est plus simple pour obtenir des informations visuelles
+- Demander à l'utilisateur de réaliser l'export haute résolution du Schéma (dans .\images\Schematic.png) et du PCB (dans .\images\PCB.png) via l'interface EasyEDA Pro (Fichier > Exporter) dès que nécessaire pour garantir une lisibilité optimale.
 - Ne pas hésiter à me demander de l'aide en cas de difficultés, pour par exempke déplacer des composants
 
 ## Documentation du schéma
@@ -21,8 +21,11 @@
 
 Le projet est considéré dans un état de référence valide quand toutes ces conditions sont réunies :
 
-- Le schéma et le PCB passent le DRC sans erreur
-- `./easyeda/ProPrj_ODB2-Scanner.epro2`, `./images/Schematic.png` et `./images/PCB.png` reflètent fidèlement l'état courant du projet EasyEDA (réexportés via les skills easyeda-api)
+- Le schéma passe l'ERC sans erreur (fonction `easyeda_erc_run` du skill — contrôle électrique : pins non connectées, conflits de type de pin, etc.)
+- Le PCB passe le DRC sans erreur (fonction `easyeda_drc_run` du skill — contrôle physique : clearances, largeurs de piste, vias, silk sur pad, etc.)
+  *(Dans l'UI EasyEDA Pro, les deux contrôles peuvent apparaître sous le même libellé "DRC" — bien vérifier qu'on lance les deux fonctions distinctes du skill, pas une seule.)*
+- `./easyeda/ProPrj_ODB2-Scanner.epro2` reflète fidèlement l'état courant du projet EasyEDA (réexporté via les skills easyeda-api)
+- `./images/Schematic.png` et `./images/PCB.png` reflètent fidèlement l'état courant du projet EasyEDA (exportés manuellement par l'utilisateur en haute résolution via l'interface graphique : Fichier > Exporter)
 - `git status` ne montre aucune modification en attente (tout est commité et pushé)
 - Il ne doit pas y avoir de symbole latex dans le README.md
 - Les net labels doivent être lisibles et porteur d'information (pas de $1NXXX ou autre)
@@ -46,10 +49,9 @@ Ces étapes sont séquentielles et bloquantes : si une étape échoue, ne pas ex
 - Voir s'il est nécessaire d'enrichir LEARNINGS.md
 - Mettre à jour la section "Prochaine Étape Immédiate" du README.md
 - Utiliser les skills easyeda-api pour exporter le projet dans ./easyeda/, écraser ProPrj_ODB2-Scanner.epro2
-- Utiliser les skills easyeda-api pour exporter un png du schéma en résolution 2274 × 1236 px (largeur 2274 px, soit 2× par rapport aux 1137 × 618 px par défaut) dans ./images/Schematic.png
-- Utiliser les skills easyeda-api pour exporter un png du PCB en résolution 1137 × 642 px (résolution par défaut) dans ./images/PCB.png
-- Faire un git add ., et proposer un message de commit
+- Demander à l'utilisateur d'effectuer l'export du Schéma dans ./images/Schematic.png et du PCB dans ./images/PCB.png depuis l'interface EasyEDA Pro (Fichier > Exporter > Image en haute résolution / 300 DPI ou 4096 px de large) afin d'assurer une lisibilité parfaite
+- Une fois les exports réalisés et confirmés par l'utilisateur, faire un git add ., et proposer un message de commit
 - Une fois le message de commit validé explicitement par l'utilisateur, faire le commit puis le push
-- Vérifier que le projet est revenu dans son état de référence (DRC + exports + `git status` vide)
+- Vérifier que le projet est revenu dans son état de référence (ERC schéma + DRC PCB + exports + `git status` vide)
 
 **Ne jamais pousser (`git push`) sans confirmation explicite de l'utilisateur sur le message de commit proposé.**
