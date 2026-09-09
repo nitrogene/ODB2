@@ -410,15 +410,18 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Prochaine action à exécuter : Plan de Masse & Gestion RF (Section 4.3)**
+> **Reprise immédiate : Synchronisation Netlist & Plan de Masse / Gestion RF (Section 4.3)**
 >
-> 1. **Zone d'exclusion RF (Keepout d'antenne) :**
->    * Définir une zone d'exclusion de plan de cuivre (`NO_POURS` / `NO_FILLS`) sur toutes les couches sous l'antenne méandre 2.4 GHz de l'ESP32 (`U1`) dans le coin supérieur droit (`x ∈ [3850, 4450], y ∈ [-220, 50]`).
-> 2. **Plans de masse (`GND`) :**
->    * Couler le plan de masse sur **Top Layer** (Layer 1) et sur **Bottom Layer** (Layer 2) avec remplissage Solid et dégagement thermique.
-> 3. **Vias de couture (Stitching Vias) & Contrôle DRC :**
->    * Disposer des vias de couture sous le pad thermique de l'ESP32, autour des blocs de découpage et le long du contour de carte pour interconnecter les plans de masse.
->    * Exécuter le DRC final et valider 0 erreur d'isolement et 0 discontinuité.
+> 1. **Vérification préliminaire de la synchronisation Netlist :**
+>    * La Section 4.2 est entièrement terminée, validée et commitée (0 erreur d'isolement / clearance).
+>    * Suite à l'ouverture de l'onglet Schéma pour les exports HD, un drapeau *Netlist Error* ("PCB and schematic netlist does not match") est réapparu dans le panneau DRC d'EasyEDA Pro.
+>    * **Action à la reprise :** Cliquer sur *Import Changes* dans le panneau DRC ou faire *Conception > Mettre à jour le PCB...* (`Alt + D` puis `U`) pour réconcilier le jeton de synchronisation Schéma/PCB.
+>
+> 2. **Démarrage de la Section 4.3 (Plan de Masse & Gestion RF) :**
+>    * **Zone d'exclusion RF (Keepout d'antenne) :** Définir la zone `Copper Keepout` (`NO_POURS` / `NO_FILLS`) sur toutes les couches sous l'antenne méandre 2.4 GHz de l'ESP32 (`U1`) dans le coin supérieur droit (`x ∈ [3850, 4450], y ∈ [-220, 50]`).
+>    * **Plans de masse (`GND`) :** Couler le plan de cuivre `GND` sur **Top Layer** (Layer 1) et sur **Bottom Layer** (Layer 2) avec remplissage Solid et dégagement thermique (Thermal Relief).
+>    * **Vias de couture (Stitching Vias) :** Disposer la matrice de vias sous le pad thermique central de l'ESP32 (`U1_41`), autour de la boucle de découpage buck (`U4`/`D2`/`L1`) et le long du périmètre de la carte pour interconnecter les plans haut et bas.
+>    * **Contrôle DRC final :** Valider 0 erreur d'isolement (Clearance), 0 broche non connectée (les 40 broches GND seront résolues par les plans de masse) et 0 erreur de netlist.
 
 ---
 
