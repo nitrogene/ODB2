@@ -28,7 +28,8 @@ Le projet est considéré dans un état de référence valide quand toutes ces c
 - `./images/Schematic.png` et `./images/PCB.png` reflètent fidèlement l'état courant du projet EasyEDA (exportés manuellement par l'utilisateur en haute résolution via l'interface graphique : Fichier > Exporter)
 - `git status` ne montre aucune modification en attente (tout est commité et pushé)
 - Il ne doit pas y avoir de symbole latex dans le README.md
-- Les net labels doivent être lisibles et porteur d'information (pas de $1NXXX ou autre)
+- Les net labels visibles sur un schéma, le PCB ou dans ce document doivent être lisibles et porteur d'information (pas de $1NXXX ou autre)
+
 
 Cette checklist est le socle commun utilisé avant de démarrer une feature et pour valider la fin d'une feature (voir sections ci-dessous).
 

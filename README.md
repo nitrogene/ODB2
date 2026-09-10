@@ -9,7 +9,7 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
 * **Diagnostic embarqué :** Lecture des données moteur en temps réel et des codes défauts (DTC) via la prise standard OBD-II (16 broches).
 * **Connectivité sans fil :** Module **ESP32** assurant la liaison sans fil (Wi-Fi / Bluetooth) vers une application smartphone Android dédiée.
 * **Support multi-protocoles :**
-  * **Ligne K-Line (ISO 9141-2 / ISO 14230 KWP2000) :** Protocole principal du calculateur moteur (ECU) de la Daewoo Kalos.
+  * **Ligne K-Line (ISO 9141-2 / ISO 14230 KWP2000).
   * **Bus CAN (ISO 15765-4) :** Diagnostic haute vitesse et compatibilité véhicules modernes.
 * **Alimentation robuste & sécurisée :**
   * Alimentation directe depuis le 12V batterie de la prise diagnostic.
@@ -22,7 +22,7 @@ Projet de conception matérielle (schématique et PCB) d'un scanner de diagnosti
 
 Pour comprendre le fonctionnement de ce scanner, il faut d'abord appréhender l'environnement très particulier d'un véhicule automobile : la batterie 12V d'une voiture n'est ni stable, ni propre (pics de surtension de l'alternateur, étincelles d'allumage, bruit des injecteurs), et les calculateurs (ECU) communiquent via des protocoles spécifiques (K-Line à 12V et bus différentiel CAN).
 
-Le circuit imprimé est découpé en **8 blocs fonctionnels interconnectés**, organisés pour purifier l'énergie, protéger les composants sensibles et assurer une communication bidirectionnelle infaillible.
+Le circuit imprimé est découpé en **9 blocs fonctionnels interconnectés**, organisés pour purifier l'énergie, protéger les composants sensibles et assurer une communication bidirectionnelle infaillible.
 
 ---
 
@@ -43,8 +43,8 @@ Le circuit imprimé est découpé en **8 blocs fonctionnels interconnectés**, o
                 │ +12V_PROT        │                   │ (avec amortisseurs R2/R3)
                 ▼                  ▼                   │
     ┌─────────────────────────┐  ┌────────────────┐    │
-    │  2. CONVERTISSEUR BUCK  │  │ 5. TRANSCEIVER │    │
-    │     12V → 5V (U4)       │  │    CAN (U2)    │    │
+    │  2. BUCK 12V -> 5V      │  │ 5. TRANSCEIVER │    │
+    │     (TPS54331 - 570kHz) │  │ CAN (TJA1051T) │    │
     │  • Inductance L1 (10µH) │  │ • Term. R11    │    │
     │  • Diode Schottky D2    │  │ • Adapt. VIO   │    │
     │  • Bootstrap C5         │  └────────┬───────┘    │
@@ -55,24 +55,25 @@ Le circuit imprimé est découpé en **8 blocs fonctionnels interconnectés**, o
                 │                         │            │
                 ▼                         │            │
     ┌─────────────────────────┐           │            │
-    │  3. RÉGULATEUR LDO 3.3V │           │            │
-    │     (U5 - LDL1117S33R)  │           │            │
+    │  3. LDO 3.3V & FILTRE HF│           │            │
+    │     (LDL1117)           │           │            │
     │  • Filtrage HF (FB1)    │           │            │
     │  • Condensateur C6      │           │            │
     └───────────┬─────────────┘           │            │
                 │ +3.3V Logique           │            │
                 ▼                         ▼            ▼
     ┌──────────────────────────────────────────────────────────────┐
-    │  4 & 8. CŒUR DE TRAITEMENT : ESP32-S3-WROOM-1 (U1)           │
+    │  8. ESP32-S3-WROOM-1 (Wi-Fi/BLE) (U1)                        │
     │  • Microcontrôleur 32-bit dual-core Xtensa LX7               │
     │  • Radio Wi-Fi 2.4 GHz & Bluetooth 5.0 (Antenne PCB intégrée)│
-    │  • Réseau de condensateurs de découplage local (C1 à C4)     │
-    │  • Témoin lumineux LED1 d'activité (piloté par IO2 via R8)   │
+    │                                                              │
+    │  7. LED D'ETAT (LED1 / IO2) (pilotée par IO2 via R8)         │
+    │  9. DECOUPLAGE (C1-C4 : 100nF) (micro-réservoirs locaux HF)  │
     └──────────────────────────────┬───────────────────────────────┘
                                    │ USB_D+ / USB_D-
                                    ▼
     ┌──────────────────────────────────────────────────────────────┐
-    │  7. INTERFACE USB-C & DÉBOGAGE (J2)                          │
+    │  4. USB-C & PROTECTIONS ESD (Debug) (J2, U7, U8)             │
     │  • Résistances de configuration CC1/CC2 (R4, R5 : 5.1 kΩ)    │
     │  • Diodes de protection antistatique ESD (U7, U8 : SD05C)    │
     └──────────────────────────────────────────────────────────────┘
@@ -84,7 +85,7 @@ Le circuit imprimé est découpé en **8 blocs fonctionnels interconnectés**, o
 
 ---
 
-#### Bloc 1 : Protection d'Entrée 12V Automobile (`F1`, `D1`, `Q1`, `Q2`, `R6`, `R10`)
+#### Bloc 1 : 1. PROTECTION 12V (PPTC + TVS + MOSFET) / 1. PROTECTION 12V & POLARITE (`F1`, `D1`, `Q1`, `Q2`, `R6`, `R10`)
 
 Le réseau électrique d'une voiture est l'un des environnements les plus agressifs pour l'électronique :
 * Démarrage du moteur : chutes brutales de tension (cranking).
@@ -113,7 +114,7 @@ Le réseau électrique d'une voiture est l'un des environnements les plus agress
 
 ---
 
-#### Bloc 2 : Convertisseur à Découpage Buck 12V → 5V (`U4`, `L1`, `D2`, `C5`, `C7`, `C8`, `R12`, `R13`, `R14`, `C9`)
+#### Bloc 2 : 2. BUCK 12V -> 5V (TPS54331 - 570kHz) (`U4`, `L1`, `D2`, `C5`, `C7`, `C8`, `R12`, `R13`, `R14`, `C9`)
 
 L'ESP32 et les circuits logiques consomment jusqu'à 300 mA à 500 mA lors des transmissions radio Wi-Fi.
 * Si on utilisait un simple régulateur linéaire pour abaisser 12V en 5V sous 500 mA, la puissance perdue en pure chaleur serait de :
@@ -153,7 +154,7 @@ L'ESP32 et les circuits logiques consomment jusqu'à 300 mA à 500 mA lors des t
 
 ---
 
-#### Bloc 3 : Régulateur Linéaire LDO 5V → 3.3V & Filtrage RF (`U5`, `FB1`, `C6`)
+#### Bloc 3 : 3. LDO 3.3V & FILTRE HF (LDL1117) (`U5`, `FB1`, `C6`)
 
 Bien que le régulateur Buck soit très efficace, son découpage haute fréquence génère des bruits harmoniques. Le microcontrôleur ESP32-S3 et son transceiver radio 2.4 GHz exigent une alimentation d'une pureté absolue pour garantir une portée Wi-Fi/Bluetooth maximale et éviter les erreurs de conversion analogique.
 
@@ -174,16 +175,35 @@ Bien que le régulateur Buck soit très efficace, son découpage haute fréquenc
 
 ---
 
-#### Bloc 4 : Condensateurs de Découplage Local Haute Fréquence (`C1` à `C4` - 100 nF)
+#### Bloc 4 : 4. USB-C & PROTECTIONS ESD (Debug) (`J2`, `U7`, `U8`, `R4`, `R5`, `VBUS_5V`)
 
-* **Pourquoi a-t-on besoin de condensateurs de 100 nF au plus près de chaque puce ?**
-  * Une piste de cuivre sur un circuit imprimé possède une inductance parasite naturelle d'environ 1 nanohenry par millimètre (L ≈ 1 nH/mm).
-  * Quand l'ESP32 bascule l'état de ses transistors internes en moins d'une nanoseconde (Δt < 1 ns), l'appel de courant brusque di/dt provoque une chute de tension fugitive (V = L · di/dt) qui peut faire chuter le 3.3V local et provoquer un plantage ou un redémarrage intempestif du microcontrôleur (*brownout reset*).
-  * **La solution :** Les condensateurs `C1` et `C2` (pour l'ESP32 `U1`), `C3` (pour la puce CAN `U2`) et `C4` (pour la puce K-Line `U3`) sont des condensateurs céramiques multi-couches (MLCC) placés à **moins de 2 mm des broches d'alimentation**. Ils agissent comme des micro-réservoirs d'énergie locale qui fournissent instantanément ces charges haute fréquence.
+Le connecteur USB-C permet de flasher le firmware dans l'ESP32, d'afficher les logs série de débogage et de tester la carte sur un banc de test sans être branché sur la voiture.
+
+```
+       Prise USB-C (J2)                     Protections ESD             ESP32-S3 (U1)
+  ┌─────────────────────────┐             ┌─────────────────┐         ┌───────────────┐
+  │ Broche A6/B6 (D+) ──────┼──────────┬──┤ U7 (SD05C TVS)  │────────►│ IO20 (USB D+) │
+  │                         │          │  └────────┬────────┘         │               │
+  │ Broche A7/B7 (D-) ──────┼────┬─────┼──┤ U8 (SD05C TVS)  │────────►│ IO19 (USB D-) │
+  │                         │    │     │  └────────┬────────┘         └───────────────┘
+  │ Broches A5 (CC1) ──[R4]─┼─┐  │     │           │
+  │ Broches B5 (CC2) ──[R5]─┼─┤  │     │          GND
+  │              (5.1 kΩ)   │ │  │     │
+  │                         │ ▼  ▼     ▼
+  └─────────────────────────┴─┴──┴─────┴───────────────────────────────────────────────
+```
+
+* **Résistances de Configuration `R4` et `R5` (5.1 kΩ pull-down - `R0805`) :**
+  * *Pourquoi sont-elles obligatoires en USB-C ?* Dans la norme USB-C, les broches `CC1` et `CC2` déterminent qui alimente qui. Les alimentations et chargeurs modernes USB-C (Power Delivery / chargeurs intelligents) ne délivrent **aucun courant** tant qu'ils ne détectent pas une résistance de 5.1 kΩ reliée à la masse sur la broche CC. Sans `R4` et `R5`, la carte ne recevrait jamais de courant 5V sur un chargeur USB-C !
+* **Diodes de Protection Antistatique ESD `U7` et `U8` (`SD05C` - boîtier SOD-323) :**
+  * *Danger de l'électricité statique :* En touchant les contacts métalliques d'un câble USB, le corps humain peut décharger des milliers de volts (décharge électrostatique ESD).
+  * Les diodes `U7` et `U8` sont des diodes TVS bidirectionnelles ultra-rapides capables de canaliser une décharge de **±30 000 Volts** à la masse en moins d'une nanoseconde, tout en présentant une capacité parasite quasi-nulle (< 3 pF) pour ne pas déformer les signaux USB haute vitesse (12 Mbit/s).
+* **Point de Test Cuivre `VBUS_5V` (`TP1` - `Test-Point-0.5mm`) :**
+  * Pad cuivre rond permettant de vérifier facilement au multimètre ou à l'oscilloscope la présence de la tension d'alimentation 5V issue du câble USB lors de la mise au point sur table.
 
 ---
 
-#### Bloc 5 : Interface de Bus Différentiel CAN (`U2` - TJA1051T, `R11`)
+#### Bloc 5 : 5. TRANSCEIVER CAN (TJA1051T - 120R) (`U2`, `R11`)
 
 Le bus CAN (*Controller Area Network*) est la norme universelle de communication dans les véhicules récents (haute vitesse jusqu'à 1 Mbit/s).
 
@@ -213,7 +233,7 @@ Le bus CAN (*Controller Area Network*) est la norme universelle de communication
 
 ---
 
-#### Bloc 6 : Interface de Ligne K-Line ISO 9141-2 (`U3` - L9637D, `R2`, `R3`)
+#### Bloc 6 : 6. TRANSCEIVER K-LINE (L9637D) (`U3`, `R2`, `R3`)
 
 La Daewoo Kalos (2003) utilise principalement la ligne **K-Line** pour son calculateur moteur (ECU).
 
@@ -240,46 +260,33 @@ La Daewoo Kalos (2003) utilise principalement la ligne **K-Line** pour son calcu
 
 ---
 
-#### Bloc 7 : Port USB-C, Programmation & Protections ESD (`J2`, `U7`, `U8`, `R4`, `R5`, `VBUS_5V`)
+#### Bloc 7 : 7. LED D'ETAT (LED1 / IO2) (`LED1`, `R8`)
 
-Le connecteur USB-C permet de flasher le firmware dans l'ESP32, d'afficher les logs série de débogage et de tester la carte sur un banc de test sans être branché sur la voiture.
-
-```
-       Prise USB-C (J2)                     Protections ESD             ESP32-S3 (U1)
-  ┌─────────────────────────┐             ┌─────────────────┐         ┌───────────────┐
-  │ Broche A6/B6 (D+) ──────┼──────────┬──┤ U7 (SD05C TVS)  │────────►│ IO20 (USB D+) │
-  │                         │          │  └────────┬────────┘         │               │
-  │ Broche A7/B7 (D-) ──────┼────┬─────┼──┤ U8 (SD05C TVS)  │────────►│ IO19 (USB D-) │
-  │                         │    │     │  └────────┬────────┘         └───────────────┘
-  │ Broches A5 (CC1) ──[R4]─┼─┐  │     │           │
-  │ Broches B5 (CC2) ──[R5]─┼─┤  │     │          GND
-  │              (5.1 kΩ)   │ │  │     │
-  │                         │ ▼  ▼     ▼
-  └─────────────────────────┴─┴──┴─────┴───────────────────────────────────────────────
-```
-
-* **Résistances de Configuration `R4` et `R5` (5.1 kΩ pull-down - `R0805`) :**
-  * *Pourquoi sont-elles obligatoires en USB-C ?* Dans la norme USB-C, les broches `CC1` et `CC2` déterminent qui alimente qui. Les alimentations et chargeurs modernes USB-C (Power Delivery / chargeurs intelligents) ne délivrent **aucun courant** tant qu'ils ne détectent pas une résistance de 5.1 kΩ reliée à la masse sur la broche CC. Sans `R4` et `R5`, la carte ne recevrait jamais de courant 5V sur un chargeur USB-C !
-* **Diodes de Protection Antistatique ESD `U7` et `U8` (`SD05C` - boîtier SOD-323) :**
-  * *Danger de l'électricité statique :* En touchant les contacts métalliques d'un câble USB, le corps humain peut décharger des milliers de volts (décharge électrostatique ESD).
-  * Les diodes `U7` et `U8` sont des diodes TVS bidirectionnelles ultra-rapides capables de canaliser une décharge de **±30 000 Volts** à la masse en moins d'une nanoseconde, tout en présentant une capacité parasite quasi-nulle (< 3 pF) pour ne pas déformer les signaux USB haute vitesse (12 Mbit/s).
-* **Point de Test Cuivre `VBUS_5V` (`Test-Point-0.5mm`) :**
-  * Pad cuivre rond permettant de vérifier facilement au multimètre ou à l'oscilloscope la présence de la tension d'alimentation 5V issue du câble USB lors de la mise au point sur table.
+* **LED d'État `LED1` (Verte - `0603`) & Résistance de Limitation `R8` (1.8 kΩ) :**
+  * Pilotée par la broche `IO2` de l'ESP32.
+  * *Rôle :* Témoin visuel de fonctionnement et d'activité du scanner.
+  * *Calcul de la résistance de limitation :* Avec une tension de sortie de 3.3V et une tension de seuil de LED verte de Vf ≈ 2.1V :
+    > **I_LED = (Vio - Vf) / R8 = (3.3V - 2.1V) / 1 800 Ω = 1.2V / 1 800 Ω ≈ 0.67 mA**
+    Cette valeur garantit un voyant parfaitement visible tout en consommant un courant dérisoire sans échauffement ni surcharge de la broche du microcontrôleur.
 
 ---
 
-#### Bloc 8 : Cœur de Traitement et Télécommunications (`U1` - ESP32-S3, `LED1`, `R8`)
+#### Bloc 8 : 8. ESP32-S3-WROOM-1 (Wi-Fi/BLE) (`U1`)
 
 * **SoC `U1` (`ESP32-S3-WROOM-1-N16R8`) :**
   * Processeur 32-bit double cœur cadencé à 240 MHz avec **16 Mo de mémoire Flash** et **8 Mo de PSRAM**.
   * Intègre nativement le contrôleur USB OTG (pas besoin de puce convertisseur série externe type CH340/CP2102).
   * Intègre le contrôleur matériel **TWAI** (*Two-Wire Automotive Interface*), 100% compatible avec la norme CAN 2.0B.
   * Antenne 2.4 GHz gravée sur le PCB assurant la liaison sans fil Wi-Fi et Bluetooth Low Energy (BLE) avec l'application mobile.
-* **LED d'État `LED1` (Verte - `0603`) & Résistance de Limitation `R8` (1.8 kΩ) :**
-  * Pilotée par la broche `IO2` de l'ESP32.
-  * *Calcul de la résistance de limitation :* Avec une tension de sortie de 3.3V et une tension de seuil de LED verte de Vf ≈ 2.1V :
-    > **I_LED = (Vio - Vf) / R8 = (3.3V - 2.1V) / 1 800 Ω = 1.2V / 1 800 Ω ≈ 0.67 mA**
-    Cette valeur garantit un voyant parfaitement visible tout en consommant un courant dérisoire sans échauffement ni surcharge de la broche du microcontrôleur.
+
+---
+
+#### Bloc 9 : 9. DECOUPLAGE (C1-C4 : 100nF) (`C1`, `C2`, `C3`, `C4`)
+
+* **Pourquoi a-t-on besoin de condensateurs de 100 nF au plus près de chaque puce ?**
+  * Une piste de cuivre sur un circuit imprimé possède une inductance parasite naturelle d'environ 1 nanohenry par millimètre (L ≈ 1 nH/mm).
+  * Quand l'ESP32 bascule l'état de ses transistors internes en moins d'une nanoseconde (Δt < 1 ns), l'appel de courant brusque di/dt provoque une chute de tension fugitive (V = L · di/dt) qui peut faire chuter le 3.3V local et provoquer un plantage ou un redémarrage intempestif du microcontrôleur (*brownout reset*).
+  * **La solution :** Les condensateurs `C1` et `C2` (pour l'ESP32 `U1`), `C3` (pour la puce CAN `U2`) et `C4` (pour la puce K-Line `U3`) sont des condensateurs céramiques multi-couches (MLCC) placés à **moins de 2 mm des broches d'alimentation**. Ils agissent comme des micro-réservoirs d'énergie locale qui fournissent instantanément ces charges haute fréquence.
 
 ---
 
@@ -300,7 +307,7 @@ Le connecteur USB-C permet de flasher le firmware dans l'ESP32, d'afficher les l
 
 ---
 
-### 2.4 Nomenclature Complète du Schéma & PCB (37 composants)
+#### 2.4 Nomenclature Complète du Schéma & PCB (38 composants)
 
 Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
 
@@ -335,6 +342,8 @@ Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
 | **R12** | 10kΩ | 0805W8F1002T5E | `R0805` | Résistance haute pont diviseur feedback Buck `U4` (rail 5V vers VSENSE) |
 | **R13** | 1.91kΩ | 0805W8F1911T5E | `R0805` | Résistance basse pont diviseur feedback Buck `U4` (VSENSE vers GND) |
 | **R14** | 10kΩ | 0805W8F1002T5E | `R0805` | Résistance série compensation de boucle Buck `U4` (broche COMP) |
+| **TP1** | *—* | Test-Point | `Test-Point-0.5mm` | Point de test pad cuivre pour le rail 5V USB (`VBUS_5V`) |
+| **TP2** | KLINE | Test-Point | `Test-Point-0.5mm` | Point de test pad cuivre pour la ligne K-Line ISO 9141-2 (`KLINE`) |
 | **U1** | 2.4GHz | ESP32-S3-WROOM-1-N16R8 | `WIRELM-SMD_ESP32-S3-WROOM-1` | SoC ESP32-S3 Wi-Fi 2.4 GHz + BLE 5.0 (16MB Flash / 8MB PSRAM) |
 | **U2** | *—* | TJA1051T/3/1J | `SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL` | Transceiver CAN haute vitesse avec broche VIO (3.3V) |
 | **U3** | *—* | E-L9637D013TR | `SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL` | Transceiver K-Line ISO 9141 / KWP2000 |
@@ -342,7 +351,6 @@ Inventaire extrait directement du projet actif via l'API EasyEDA Pro :
 | **U5** | *—* | LDL1117S33R | `SOT-223-4_L6.5-W3.5-P2.30-LS7.0-BR` | Régulateur linéaire LDO 5V → 3.3V faible bruit, 1.2A |
 | **U7** | *—* | SD05C_C53238084 | `SOD-323_L1.7-W1.3-LS2.5-BI` | Diode ESD bidirectionnelle protection ligne USB D+ |
 | **U8** | *—* | SD05C_C53238084 | `SOD-323_L1.7-W1.3-LS2.5-BI` | Diode ESD bidirectionnelle protection ligne USB D- |
-| **VBUS_5V**| *—* | Test-Point | `Test-Point-0.5mm` | Point de test pad cuivre pour le rail 5V USB |
 
 ---
 
@@ -456,7 +464,7 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 - [x] **Ligne K-Line (`U3` - `L9637D013TR`) :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
   - [x] `UART_RX` : Broche 1 (`RX`) de `U3` → `R2` (10 Ω) → Broche 4 (`IO4`) de l'ESP32. *(Liaison K_RX_IC 10 mil sur Top Layer jusqu'à R2, puis UART_RX_MCU 8 mil sur Top Layer le long du corridor x = 3635 vers U1_4)*
   - [x] `UART_TX` : Broche 4 (`TX`) de `U3` → `R3` (10 Ω) → Broche 5 (`IO5`) de l'ESP32. *(Liaison K_TX_IC via Bottom Layer et 2 vias 24/12 mil vers R3_2, puis UART_TX_MCU 8 mil sur Top Layer le long du corridor x = 3655 vers U1_5)*
-  - [x] Ligne physique `K` : Broche 6 (`K`) de `U3` vers broche 7 de la prise OBD-II. *(Broche assignée au net K_LINE)*
+  - [x] Ligne physique `K` : Broche 6 (`K`) de `U3` reliée au point de test `TP2` (`KLINE`) sur Top Layer (piste 10 mil, 0 erreur DRC).
 - [x] **Bus CAN (`U2` - `TJA1051T/3/1J`) :** *(Routage réalisé via l'API EasyEDA Pro, 0 erreur DRC)*
   - [x] Lignes logiques : `TXD` (broche 1) → Broche 37 (`TXD0`) ESP32 ; `RXD` (broche 4) → Broche 36 (`RXD0`) ESP32. *(Routage 10 mil via Bottom Layer sous l'ESP32 et vias 24/12 mil à x = 4320 et x = 4260)*
   - [x] Mode normal : Broche 8 (`S`) → Masse `GND`. *(Broche assignée au net GND)*
