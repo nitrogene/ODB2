@@ -415,7 +415,7 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 
 ### Vue 3D
 
-![PCB ODB2 Scanner](./images/3D.glb)
+![3D ODB2 Scanner](./images/3D.png)
 
 ---
 
