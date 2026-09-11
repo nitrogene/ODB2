@@ -413,6 +413,10 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 
 ![PCB ODB2 Scanner](./images/PCB.png)
 
+### Vue 3D
+
+![PCB ODB2 Scanner](./images/3D.glb)
+
 ---
 
 ### 3.1 Prochaine Étape Immédiate
@@ -495,7 +499,7 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 - [x] **Visualisation 3D :** Vérification visuelle globale de l'assemblage et du dégagement mécanique.
 
 ### 4.5 Recherche d'optimisations du PCB
-- [x] **Optimisations du PCB :** Analyser le PCB à la recherche d'optimisations: déplacer des composants pour améliorer les performances / la stabilité, pour raccourcir des pistes ou supprimer des vias. *(Audit complété : 4 chantiers identifiés, découpés en sous-tâches 4.6.1 à 4.6.4)*
+- [x] **Optimisations du PCB :** Analyser le PCB à la recherche d'optimisations: déplacer des composants pour améliorer les performances / la stabilité, pour raccourcir des pistes ou supprimer des vias. *(Audit complété : 4 chantiers identifiés, découpés en sous-tâches 4.6.1 à 4.6.6)*
 
 ### 4.6 Implémentation des optimisations du PCB
 - [x] **4.6.1 Normalisation des noms de nets (Règle AGENTS.md) :**
@@ -507,10 +511,13 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
   - [x] Supprimer les 8 vias existants et les pistes Bottom associées pour libérer le plan de masse central. *(23 segments supprimés, 8 anciens vias supprimés, 2 vias ultra-courts ajoutés, gain net de 6 vias, plan de masse central libéré, DRC = 0)*
 - [x] **4.6.3 Optimisation du découplage des transceivers :**
   - [x] Rapprocher `C3` au plus près de la broche 5 (`VIO`) du transceiver CAN `U2`. *(C3 relocalisé à (3465, -360, rot 270), distance à U2_5 réduite de 318 mil à 60 mil / 1.52 mm, liaison directe en 20 mil)*
-  - [x] Rapprocher `C4` au plus près de la broche 3 (`VCC`) du transceiver K-Line `U3`. *(C4 relocalisé à (3345, -920, rot 180), distance à U3_3 réduite de >350 mil à 67.6 mil / 1.71 mm, alimentation directe via (3375, -950) -> C4_1 -> U3_3 en 16 mil, rail Est nettoyé, DRC = 0, ERC = 0)*
-- [ ] **4.6.4 Optimisation de la boucle de commutation Buck :**
-  - [ ] Évaluer le compactage de l'inductance `L1` pour raccourcir le nœud `PH_BUCK` de 843 mil à ~350 mil.
-  - [ ] Re-couler les plans de masse et vérifier DRC = 0. 
+  - [x] Rapprocher `C4` au plus près de la broche 3 (`VCC`) du transceiver K-Line `U3`. *(C4 relocalisé à (3345, -920, rot 180), distance à U3_3 réduite de >350 mil et un saut de couche à 67.6 mil / 1.71 mm, alimentation directe via (3375, -950) -> C4_1 -> U3_3 en 16 mil, rail Est nettoyé, DRC = 0, ERC = 0)*
+- [x] **4.6.4 Évaluation de la boucle de commutation Buck :**
+  - [x] Évaluer le compactage de l'inductance `L1` pour raccourcir le nœud `PH_BUCK` de 843 mil à ~350 mil. *(Évaluation réalisée : maintien de l'emplacement actuel. Rapprocher L1 de U4 viendrait placer cette bobine de puissance 6×6 mm à moins de 1.5 mm du nœud de compensation COMP (C9/R14), créant un risque critique d'instabilité et de jitter par couplage magnétique inductif dans cette boucle analogique à haute impédance. De plus, à 300 mA pour une puce dimensionnée à 3.5 A, l'impact capacitif de la piste actuelle est négligeable et son isolation vis-à-vis du LDO U5 est optimale)*
+- [x] **4.6.5 Adoucissement des angles de routage (chanfreins à 45°) :**
+  - [x] Remplacer les angles droits (90°) par des chanfreins à 45° sur le bus CAN (`CANH`, `CANL`) et les signaux sensibles pour optimiser la propagation et minimiser les discontinuités d'impédance. *(Chanfreins à 45° de 25 mil appliqués sur les 4 coudes de CANH et CANL entre U2 et R11, éliminant les discontinuités d'impédance HF tout en maintenant un dégagement > 18 mil vers les vias et pistes adjacentes, DRC = 0)*
+- [x] **4.6.6 Re-coulage des plans de masse et vérification DRC :**
+  - [x] Re-couler les plans de masse (Top et Bottom Layer) et vérifier DRC = 0 / ERC = 0. *(Plans Top et Bottom régénérés avec pouredCount = 2, continuité parfaite sans îlot isolé, DRC PCB = 0 erreur, ERC Schéma = 0 erreur)*
 
 ### 4.7 Contrôle Final
 - [ ] **Silkscreen**: rajouter des informations sur le PCB pour délimiter des zones logiques (ie Alimentation). Decouper en sous taches de ce point

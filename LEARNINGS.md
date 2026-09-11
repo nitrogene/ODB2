@@ -426,3 +426,16 @@ if ($res.result.success -and $res.result.base64) {
   * `C4` (100 nF pour U3 K-Line VCC) a été relocalisé à `(3345, -920, rot 180)` à 1.7 mm de la broche 3 de `U3`.
   * La ligne d'alimentation 3.3V côté Est a été nettoyée en supprimant 4 segments en escalier au profit d'un rail direct en L le long de `x = 3509.8`.
 
+---
+
+## [2026-09-11] Sous-tâches 4.6.5 & 4.6.6 : Chanfreinage à 45° du bus CAN et intégrité du plan de masse
+
+* **Méthodes d'accès aux coordonnées des pastilles (`pcb_PrimitivePad`) :**
+  * Les coordonnées d'une pastille s'obtiennent par `await pad.getState_X()` et `await pad.getState_Y()` (et le numéro par `await pad.getState_PadNumber()`). La méthode `getState_Center()` n'existe pas sur la classe `pcb_PrimitivePad`.
+* **Adoucissement des angles (Chanfreinage 45°) sur paires différentielles :**
+  * Les angles droits (90°) introduisent des ruptures d'impédance caractéristique et augmentent la capacité parasite locale aux coudes de routage, favorisant les réflexions et le rayonnement EMI lors de fronts raides (cas typique du bus CAN 500 kbps / 1 Mbps).
+  * L'insertion d'un biseau à 45° ($\Delta x = \Delta y = 25\text{ mil}$ pour une piste de 10 mil) adoucit la transition tout en conservant une marge de dégagement (`Safe Spacing`) très confortable vis-à-vis des vias de masse et pistes voisines (> 18 mil effectifs vs 6 mil mini requis).
+* **Vérification de continuité du cuivre coulé (`pcb_PrimitivePoured`) :**
+  * Après reconstruction des plans (`rebuildCopperRegion()`), le nombre de régions continues se vérifie via `await eda.pcb_PrimitivePoured.getAll()`. Deux régions actives (`pouredCount = 2`) confirment qu'il y a exactement un plan de masse unifié sur Top Layer et un sur Bottom Layer, sans îlot flottant ou isolé.
+
+

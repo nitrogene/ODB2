@@ -54,5 +54,6 @@ Ces étapes sont séquentielles et bloquantes : si une étape échoue, ne pas ex
 - Une fois les exports réalisés et confirmés par l'utilisateur, faire un git add ., et proposer un message de commit
 - Une fois le message de commit validé explicitement par l'utilisateur, faire le commit puis le push
 - Vérifier que le projet est revenu dans son état de référence (ERC schéma + DRC PCB + exports + `git status` vide)
+- Sauvegarger un fichier step dans ./images, ainsi que sa conversion en glb sous ./images/3D.glb 
 
 **Ne jamais pousser (`git push`) sans confirmation explicite de l'utilisateur sur le message de commit proposé.**
