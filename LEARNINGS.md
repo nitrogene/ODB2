@@ -386,6 +386,19 @@ if ($res.result.success -and $res.result.base64) {
 
 ---
 
+## [2026-09-11] Sous-tâche 4.6.2 : Signature de `pcb_PrimitiveVia.create` et règles de routage Type-C
+
+* **Ordre des paramètres de `eda.pcb_PrimitiveVia.create` (CRITIQUE) :**
+  * La signature exacte est `create(net, x, y, holeDiameter, diameter, viaType, ...)` : le diamètre de perçage (`holeDiameter`) précède le diamètre extérieur du via (`diameter`). Inverser ces deux arguments crée un via avec un perçage plus grand que le diamètre de pastille et déclenche l'erreur DRC `Via Size / viaSize: The outer diameter of the via hole of {obj} is X, which should be 0.5mm ~ 10mm`.
+* **Règles d'échappement des connecteurs USB-C traversants (16 broches) :**
+  * L'écartement entre broches d'une même rangée (pas de 1.0 mm, pastille de 0.8 mm) laisse moins de 8 mil de jeu, interdisant le passage d'une piste entre deux broches voisines sous la règle Safe Spacing standard (10 mil / 0.254 mm).
+  * Les broches de la rangée A doivent s'échapper vers le nord (vers le bord de carte) et les broches de la rangée B vers le sud.
+  * Les pattes de fixation mécaniques de blindage (ex. `J2_0`) sont volumineuses (70.9 × 39.4 mil) : pour passer au nord sans violer la règle de bordure (`Board Outline to Track >= 0.3 mm`), la piste doit adopter une largeur fine (ex. 5 mil) calée sur la ligne médiane libre (`y ≈ 35 mil`).
+* **Vigilance sur le bus d'alimentation Layer 2 :**
+  * La distribution 3.3V descend sur Layer 2 le long du méridien `x = 3050` (piste de 24 mil). Tout saut ou via vers Layer 2 dans le bloc ouest doit impérativement respecter `x >= 3075 mil` pour ne pas couper ce rail d'alimentation.
+
+---
+
 ## [2026-09-11] Normalisation Schéma ↔ PCB des noms de net et micro-zones d'exclusion (`NO_POURS`)
 
 * **Propagation des ports de réseau (`sch_PrimitiveComponent.createNetPort`) :**

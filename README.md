@@ -418,17 +418,19 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Reprise immédiate : Relocalisation de R4/R5 USB-C & Suppression de vias (Sous-tâche 4.6.2)**
+> **Reprise immédiate : Optimisation du découplage des transceivers U2/U3 (Sous-tâche 4.6.3)**
 >
-> 1. **Normalisation des noms de nets (Sous-tâche 4.6.1) — TERMINÉ & VALIDÉ :**
->    * **100% des nets nommés explicitement :** Disparition totale des nets anonymes `$1N...` sur le schéma et le circuit imprimé. Attribution rigoureuse des labels fonctionnels : `BOOT_BUCK`, `VSENSE_BUCK`, `COMP_BUCK`, `RC_COMP`, `VBUS_USB`, `K_LINE`.
->    * **Résorption des clearances cuivre :** Pose de micro-zones d'exclusion `NO_POURS` ciblées sur Layer 1 sous `C5` et `R13_2` éliminant tout conflit d'isolement lors de la régénération des plans.
->    * **Résultat des contrôles :** **DRC PCB = 0 erreur** (0 non-connecté, 0 clearance, 0 netlist), **ERC Schématique = 0 erreur**.
+> 1. **Relocalisation de R4/R5 (USB-C) & Suppression de 6 vias (Sous-tâche 4.6.2) — TERMINÉ & VALIDÉ :**
+>    * **Déplacement au plus près de J2 :** `R4` (5.1 kΩ) relocalisée à `(3100, -35)` et `R5` (5.1 kΩ) à `(3100, -145)`.
+>    * **Suppression massive de vias et pistes :** Élimination de 23 segments de pistes longs et suppression nette de **6 vias** (passage de 8 vias à 2 vias courts dédiés `VIA_CC1` et `VIA_CC2`).
+>    * **Libération du plan de masse central :** Le corridor sous `U2` (CAN) et `U3` (K-Line) ainsi que les anciens emplacements de R4/R5 (`x = 3113, y = -475 / -730`) sont désormais 100% désencombrés pour accueillir les condensateurs de découplage `C3` et `C4`.
+>    * **Simplification de VBUS_USB :** Ligne `VBUS_USB` tracée en direct de `J2` (`A4B9`) à `TP1`.
+>    * **Résultat des contrôles :** **DRC PCB = 0 erreur**, **ERC Schématique = 0 erreur**.
 >
-> 2. **Prochaine action à exécuter : 4.6.2 Relocalisation de R4/R5 (USB-C) & Suppression de 6 à 8 vias :**
->    * Déplacer `R4` et `R5` (pull-downs 5.1 kΩ USB-C) au plus près de `J2` (zone `x ≈ 3180-3240, y ≈ -80 à -160`).
->    * Re-router `USB_CC1` et `USB_CC2` en pistes directes ultra-courtes (< 200 mil).
->    * Supprimer les 8 vias existants et les pistes Bottom associées pour libérer le plan de masse central sous `U2`/`U3`.
+> 2. **Prochaine action à exécuter : 4.6.3 Optimisation du découplage des transceivers :**
+>    * Rapprocher `C3` (100 nF) au plus près de la broche 5 (`VIO`) du transceiver CAN `U2`.
+>    * Rapprocher `C4` (100 nF) au plus près de la broche 3 (`VCC`) du transceiver K-Line `U3`.
+>    * Valider DRC = 0 et ERC = 0.
 
 ---
 
@@ -501,10 +503,10 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 - [x] **4.6.1 Normalisation des noms de nets (Règle AGENTS.md) :**
   - [x] Nommer explicitement sur le schéma : `BOOT_BUCK` (`$1N19`), `VSENSE_BUCK` (`$1N106`), `COMP_BUCK` (`$1N107`), `RC_COMP` (`$1N109`), `VBUS_USB` (`$1N23`), `K_LINE` (`$1N55`). *(NetPorts et scission des fils réalisés, 0 net $1N restant dans le schéma)*
   - [x] Mettre à jour le PCB, synchroniser les pistes et vérifier la cohérence ERC = 0 / DRC = 0. *(Pads et pistes mis à jour, micro-keepouts NO_POURS Top Layer sous C5 et R13_2 pour éliminer les langues de cuivre, synchronisation réussie, DRC = 0, ERC = 0)*
-- [ ] **4.6.2 Relocalisation de R4/R5 (USB-C) & Suppression de 6 à 8 vias :**
-  - [ ] Déplacer `R4` et `R5` au plus près de `J2` (zone `x ≈ 3180-3240, y ≈ -80 à -160`).
-  - [ ] Re-router `USB_CC1` et `USB_CC2` en liaisons directes ultra-courtes (< 200 mil).
-  - [ ] Supprimer les 8 vias existants et les pistes Bottom associées pour libérer le plan de masse central.
+- [x] **4.6.2 Relocalisation de R4/R5 (USB-C) & Suppression de 6 vias :**
+  - [x] Déplacer `R4` et `R5` au plus près de `J2` (zone `x ≈ 3100, y ≈ -35 à -145`). *(R4 positionnée à (3100, -35), R5 positionnée à (3100, -145))*
+  - [x] Re-router `USB_CC1` et `USB_CC2` en liaisons directes ultra-courtes. *(Liaisons directes optimisées Top/Bottom avec VIA_CC1 à (3060.6, -10) et VIA_CC2 à (3100, -185))*
+  - [x] Supprimer les 8 vias existants et les pistes Bottom associées pour libérer le plan de masse central. *(23 segments supprimés, 8 anciens vias supprimés, 2 vias ultra-courts ajoutés, gain net de 6 vias, plan de masse central libéré, DRC = 0)*
 - [ ] **4.6.3 Optimisation du découplage des transceivers :**
   - [ ] Rapprocher `C3` au plus près de la broche 5 (`VIO`) du transceiver CAN `U2`.
   - [ ] Rapprocher `C4` au plus près de la broche 3 (`VCC`) du transceiver K-Line `U3`.
