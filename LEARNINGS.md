@@ -367,4 +367,19 @@ if ($res.result.success -and $res.result.base64) {
   * `EPCB_PrimitiveRegionRuleType.NO_POURS` (`7`) : Interdiction d'incursion des plans de masse ou de puissance (`Copper Pour`).
   * Spécifier `ruleType: [5, 6, 7]` garantit l'absence totale de tout conducteur sous l'antenne radio (2.4 GHz).
 
+---
 
+## [2026-09-11] Plans de masse (`pcb_PrimitivePour`), régénération et vias de couture (Stitching Vias)
+
+* **Création des plans de masse :**
+  * `eda.pcb_PrimitivePour.create(net, layer, complexPolygon, pourFillMethod, preserveSilos, pourName, pourPriority, lineWidth, primitiveLock)`
+  * Pour couvrir l'ensemble du contour de carte, utiliser le polygone rectangulaire :
+    `eda.pcb_MathPolygon.createPolygon(['R', 1850, 50, 2600, 1250, 0, 0])`
+  * Couche Top (`1`), Couche Bottom (`2`), méthode `'solid'` (`EPCB_PrimitivePourFillMethod.SOLID`), `preserveSilos: false` pour supprimer les îlots de cuivre isolés.
+* **Calcul et régénération du remplissage cuivre :**
+  * Après création ou déplacement d'éléments, appeler impérativement `await pour.rebuildCopperRegion()` pour recalculer les zones de remplissage (`IPCB_PrimitivePoured`) et les freins thermiques (*thermal relief*).
+* **Résorption des îlots isolés via pistes d'amorce et vias de couture :**
+  * Lorsque `preserveSilos` est à `false`, les pastilles situées dans des zones étranglées par des pistes de signaux perdent leur frein thermique si le cuivre ne peut pas s'y infiltrer en respectant le dégagement (clearance).
+  * L'insertion d'un via de couture (perçage 12 mil, diamètre 24 mil) raccordé par une courte piste de 10-12 mil sur la couche de la pastille (avec coordonnées exactes `pad.getState_X()`, `pad.getState_Y()`) permet de basculer immédiatement la continuité vers le plan de masse opposé sans aucun conflit DRC.
+* **Matrice thermique pour boîtier QFN/LGA (ESP32 pad 41) :**
+  * Pour les modules dotés d'un pad thermique composite divisé en sous-pastilles (ex. 9 pads 3×3 sous l'ESP32-S3), disposer une matrice de vias de masse 12/24 mil interconnectée par un quadrillage de pistes de cuivre sur les deux couches garantit une dissipation thermique optimale vers le plan inférieur et une continuité électrique parfaite (0 erreur DRC).

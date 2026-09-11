@@ -418,16 +418,18 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Reprise immédiate : Plans de masse (GND) & Vias de couture (Section 4.3)**
+> **Reprise immédiate : Contrôle Intermédiaire & Optimisations PCB (Sections 4.4 & 4.5)**
 >
-> 1. **Zone d'exclusion RF (Keepout d'antenne méandre) — ÉTENDU & VALIDÉ :**
->    * Reroutage de la paire différentielle `USB_D+` et `USB_D-` sous `y = -220` (à `y = -256` et `y = -240`) pour libérer totalement le flanc gauche de l'antenne ESP32.
->    * Extension de la zone `RF_ANTENNA_KEEPOUT` (`EPCB_LayerId.MULTI`, règles `NO_WIRES`, `NO_FILLS`, `NO_POURS`) sur l'intégralité de la largeur d'antenne (`x ∈ [3680, 4450], y ∈ [-220, 50]`, largeur 770 mil) avec 0 erreur DRC.
+> 1. **Plans de masse (`GND`) & Vias de couture (Section 4.3) — TERMINÉ & VALIDÉ :**
+>    * **Plans de masse Top & Bottom (`GND`) :** Plans coulés sur les deux couches (Layer 1 et Layer 2) avec remplissage plein (*Solid Fill*), dégagement de 10 mil (0.254 mm) et freins thermiques (*Thermal Relief*).
+>    * **Vias thermiques ESP32 (`U1_41`) :** Matrice de 9 vias de masse (perçage 12 mil, diamètre 24 mil) avec quadrillage cuivre d'interconnexion assurant une dissipation thermique maximale vers le plan inférieur.
+>    * **Vias de découpage & découplage :** Vias de masse dédiés sous la boucle de découpage buck (`U4`/`D2`/`L1`/`C7`/`C8`), les diodes TVS USB (`U7`/`U8`), les condensateurs de découplage (`C1`/`C2`) et la LED de statut.
+>    * **Vias de couture périphériques :** Anneau de vias de couture réguliers tout le long du périmètre de la carte (blindage cage de Faraday et suppression EMI).
+>    * **Résultat DRC :** **0 Erreur de connexion** (résorption intégrale des 39 broches GND), **0 Erreur d'isolement (Clearance)**, **0 Erreur de netlist** (DRC = 0, ERC Schéma = 0).
 >
-> 2. **Prochaine action à exécuter : Plans de masse (`GND`) & Vias :**
->    * **Plans de masse (`GND`) :** Couler le plan de cuivre `GND` sur **Top Layer** (Layer 1) et sur **Bottom Layer** (Layer 2) avec remplissage plein (*Solid Fill*), dégagement de 10 mil (0.254 mm) et freins thermiques (*Thermal Relief*). Cela raccordera les 39 pastilles `GND` actuellement en attente.
->    * **Vias de couture (Stitching Vias) :** Disposer la matrice de vias sous le pad thermique central de l'ESP32 (`U1_41`), autour de la boucle de découpage buck (`U4`/`D2`/`L1`) et le long du périmètre de la carte pour interconnecter les plans haut et bas.
->    * **Contrôle DRC :** Valider 0 erreur d'isolement (Clearance), 0 broche non connectée (résorption des 39 broches GND) et 0 erreur de netlist.
+> 2. **Prochaine action à exécuter : Visualisation 3D & Optimisations PCB (Sections 4.4 & 4.5) :**
+>    * **Visualisation 3D :** Contrôle visuel de l'assemblage et du dégagement mécanique dans l'interface EasyEDA Pro.
+>    * **Recherche d'optimisations du PCB (Section 4.5) :** Analyse fine des pistes, suppression de vias superflus éventuels, optimisation des longueurs et continuités de blindage.
 
 ---
 
@@ -480,17 +482,17 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
   - [x] **Définir le keepout AVANT de couler les plans GND** (sinon reprise manuelle du remplissage après coup).
   - [x] Définir une zone `Copper Keepout` sur **toutes les couches (All Layers)** sous et autour de l'antenne méandre de l'ESP32 (coin supérieur droit). *(Zone multicouche `RF_ANTENNA_KEEPOUT` x ∈ [3680, 4450], y ∈ [-220, 50] sur couche `EPCB_LayerId.MULTI` avec règles NO_WIRES, NO_FILLS, NO_POURS après reroutage de USB_D+/USB_D- à y < -220)*
   - [x] Garantir l'absence totale de cuivre (aucun plan de masse ni piste) pour préserver les performances radio. *(0 piste, 0 via dans la zone, exclusion stricte validée sur 770 mil de large)*
-- [ ] **Plans de masse (Copper Area) :**
-  - [ ] Plan `GND` sur **Top Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief).
-  - [ ] Plan `GND` sur **Bottom Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief).
-- [ ] **Vias de couture (Stitching Vias) :**
-  - [ ] Vias de masse sous le pad thermique central de l'ESP32 (broches 41).
-  - [ ] Vérifier la densité de vias pour la **dissipation thermique**, pas seulement pour passer le DRC.
-  - [ ] Vias de masse au niveau des condensateurs de découplage et du bloc de découpage `U4`/`D2`.
-  - [ ] Vias de masse réguliers le long du contour de carte.
+- [x] **Plans de masse (Copper Area) :**
+  - [x] Plan `GND` sur **Top Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief). *(Plan `GND_TOP` créé et régénéré, 0 erreur DRC)*
+  - [x] Plan `GND` sur **Bottom Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief). *(Plan `GND_BOTTOM` créé et régénéré, 0 erreur DRC)*
+- [x] **Vias de couture (Stitching Vias) :**
+  - [x] Vias de masse sous le pad thermique central de l'ESP32 (broches 41). *(Matrice 3×3 de 9 vias 12/24 mil interconnectée par quadrillage cuivre sur les deux couches)*
+  - [x] Vérifier la densité de vias pour la **dissipation thermique**, pas seulement pour passer le DRC. *(Dissipation thermique haute performance assurée vers le plan inférieur)*
+  - [x] Vias de masse au niveau des condensateurs de découplage et du bloc de découpage `U4`/`D2`. *(Vias dédiés placés à D2, U4, C7, C8, C1, C2, U7, U8, U2_8 et LED1)*
+  - [x] Vias de masse réguliers le long du contour de carte. *(Anneau de vias de couture réguliers sur les 4 arêtes du PCB, respectant le dégagement de bordure >= 11.8 mil et l'exclusion d'antenne)*
 
 ### 4.4 Contrôle Intermédiaire (post plan de masse)
-- [ ] **Contrôle DRC (Design Rule Check) :** Exécuter la vérification des règles de conception sous EasyEDA Pro (`Shift + R`) et corriger les erreurs éventuelles.
+- [x] **Contrôle DRC (Design Rule Check) :** Exécuter la vérification des règles de conception sous EasyEDA Pro (`Shift + R`) et corriger les erreurs éventuelles. *(DRC PCB = 0 erreur, ERC Schéma = 0 erreur)*
 - [ ] **Visualisation 3D :** Vérification visuelle globale de l'assemblage et du dégagement mécanique.
 
 ### 4.5 Recherche d'optimisations du PCB
