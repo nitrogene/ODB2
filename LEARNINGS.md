@@ -383,3 +383,17 @@ if ($res.result.success -and $res.result.base64) {
   * L'insertion d'un via de couture (perçage 12 mil, diamètre 24 mil) raccordé par une courte piste de 10-12 mil sur la couche de la pastille (avec coordonnées exactes `pad.getState_X()`, `pad.getState_Y()`) permet de basculer immédiatement la continuité vers le plan de masse opposé sans aucun conflit DRC.
 * **Matrice thermique pour boîtier QFN/LGA (ESP32 pad 41) :**
   * Pour les modules dotés d'un pad thermique composite divisé en sous-pastilles (ex. 9 pads 3×3 sous l'ESP32-S3), disposer une matrice de vias de masse 12/24 mil interconnectée par un quadrillage de pistes de cuivre sur les deux couches garantit une dissipation thermique optimale vers le plan inférieur et une continuité électrique parfaite (0 erreur DRC).
+
+---
+
+## [2026-09-11] Normalisation Schéma ↔ PCB des noms de net et micro-zones d'exclusion (`NO_POURS`)
+
+* **Propagation des ports de réseau (`sch_PrimitiveComponent.createNetPort`) :**
+  * Pour que le compilateur de netlist EasyEDA associe un `NetPort` aux composants raccordés, la broche électrique interne du port (`x, y`) doit impérativement coïncider avec un point d'extrémité de segment de fil (`Wire endpoint`) ou une intersection physique.
+  * Si le port est positionné au milieu d'un segment de fil continu sans sommet (`vertex`), le fil n'est pas scindé automatiquement et conserve son identifiant auto-généré (`$1N...`). Scinder le segment en sous-segments connectés au point d'insertion du port propage immédiatement le nouveau nom de net dans toute la netlist.
+* **Synchronisation automatisée Schéma ↔ PCB :**
+  * L'appel `await eda.pcb_Document.importChanges()` sur le document PCB actif applique et aligne la netlist du circuit imprimé sur le schéma ouvert sans blocage modal lorsque les documents sont en cohérence, éliminant l'erreur de DRC `Netlist Error: PCB and schematic netlist does not match`.
+* **Micro-zones d'exclusion (`NO_POURS`) contre les langues de cuivre intempestives :**
+  * Lors de la régénération d'un plan de masse (`rebuildCopperRegion()`), le moteur de remplissage peut créer des langues ou pointes de cuivre s'infiltrant dans les fentes étroites entre les pastilles de composants CMS passifs (ex. entre les pads 1 et 2 d'un boîtier 0603 ou 0805), causant des violations d'isolement au mil près (ex. 0.196 mm ou 0.22 mm vs règle `Safe Spacing` >= 0.254 mm).
+  * La création d'une micro-zone d'exclusion locale sur la couche cuivre concernée (`eda.pcb_PrimitiveRegion.create(layer, polygon, [7], name)`) avec `ruleType: [EPCB_PrimitiveRegionRuleType.NO_POURS]` (valeur 7) bloque net l'intrusion du plan de masse dans l'intervalle sensible sans impacter les pistes de routage ni les connexions des pastilles voisines, assurant un DRC à 0 erreur d'isolement.
+

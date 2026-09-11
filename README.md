@@ -418,18 +418,17 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Reprise immédiate : Contrôle Intermédiaire & Optimisations PCB (Sections 4.4 & 4.5)**
+> **Reprise immédiate : Relocalisation de R4/R5 USB-C & Suppression de vias (Sous-tâche 4.6.2)**
 >
-> 1. **Plans de masse (`GND`) & Vias de couture (Section 4.3) — TERMINÉ & VALIDÉ :**
->    * **Plans de masse Top & Bottom (`GND`) :** Plans coulés sur les deux couches (Layer 1 et Layer 2) avec remplissage plein (*Solid Fill*), dégagement de 10 mil (0.254 mm) et freins thermiques (*Thermal Relief*).
->    * **Vias thermiques ESP32 (`U1_41`) :** Matrice de 9 vias de masse (perçage 12 mil, diamètre 24 mil) avec quadrillage cuivre d'interconnexion assurant une dissipation thermique maximale vers le plan inférieur.
->    * **Vias de découpage & découplage :** Vias de masse dédiés sous la boucle de découpage buck (`U4`/`D2`/`L1`/`C7`/`C8`), les diodes TVS USB (`U7`/`U8`), les condensateurs de découplage (`C1`/`C2`) et la LED de statut.
->    * **Vias de couture périphériques :** Anneau de vias de couture réguliers tout le long du périmètre de la carte (blindage cage de Faraday et suppression EMI).
->    * **Résultat DRC :** **0 Erreur de connexion** (résorption intégrale des 39 broches GND), **0 Erreur d'isolement (Clearance)**, **0 Erreur de netlist** (DRC = 0, ERC Schéma = 0).
+> 1. **Normalisation des noms de nets (Sous-tâche 4.6.1) — TERMINÉ & VALIDÉ :**
+>    * **100% des nets nommés explicitement :** Disparition totale des nets anonymes `$1N...` sur le schéma et le circuit imprimé. Attribution rigoureuse des labels fonctionnels : `BOOT_BUCK`, `VSENSE_BUCK`, `COMP_BUCK`, `RC_COMP`, `VBUS_USB`, `K_LINE`.
+>    * **Résorption des clearances cuivre :** Pose de micro-zones d'exclusion `NO_POURS` ciblées sur Layer 1 sous `C5` et `R13_2` éliminant tout conflit d'isolement lors de la régénération des plans.
+>    * **Résultat des contrôles :** **DRC PCB = 0 erreur** (0 non-connecté, 0 clearance, 0 netlist), **ERC Schématique = 0 erreur**.
 >
-> 2. **Prochaine action à exécuter : Visualisation 3D & Optimisations PCB (Sections 4.4 & 4.5) :**
->    * **Visualisation 3D :** Contrôle visuel de l'assemblage et du dégagement mécanique dans l'interface EasyEDA Pro.
->    * **Recherche d'optimisations du PCB (Section 4.5) :** Analyse fine des pistes, suppression de vias superflus éventuels, optimisation des longueurs et continuités de blindage.
+> 2. **Prochaine action à exécuter : 4.6.2 Relocalisation de R4/R5 (USB-C) & Suppression de 6 à 8 vias :**
+>    * Déplacer `R4` et `R5` (pull-downs 5.1 kΩ USB-C) au plus près de `J2` (zone `x ≈ 3180-3240, y ≈ -80 à -160`).
+>    * Re-router `USB_CC1` et `USB_CC2` en pistes directes ultra-courtes (< 200 mil).
+>    * Supprimer les 8 vias existants et les pistes Bottom associées pour libérer le plan de masse central sous `U2`/`U3`.
 
 ---
 
@@ -493,12 +492,25 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 
 ### 4.4 Contrôle Intermédiaire (post plan de masse)
 - [x] **Contrôle DRC (Design Rule Check) :** Exécuter la vérification des règles de conception sous EasyEDA Pro (`Shift + R`) et corriger les erreurs éventuelles. *(DRC PCB = 0 erreur, ERC Schéma = 0 erreur)*
-- [ ] **Visualisation 3D :** Vérification visuelle globale de l'assemblage et du dégagement mécanique.
+- [x] **Visualisation 3D :** Vérification visuelle globale de l'assemblage et du dégagement mécanique.
 
 ### 4.5 Recherche d'optimisations du PCB
-- [ ] **Optimisations du PCB :** Analyser le PCB à la recherche d'optimisations: déplacer des composants pour améliorer les performances / la stabilité, pour raccourcir des pistes ou supprimer des vias. Découper en sous tâches de 4.6
+- [x] **Optimisations du PCB :** Analyser le PCB à la recherche d'optimisations: déplacer des composants pour améliorer les performances / la stabilité, pour raccourcir des pistes ou supprimer des vias. *(Audit complété : 4 chantiers identifiés, découpés en sous-tâches 4.6.1 à 4.6.4)*
 
-### 4.6 Implémentations des optimisations du PCB 
+### 4.6 Implémentation des optimisations du PCB
+- [x] **4.6.1 Normalisation des noms de nets (Règle AGENTS.md) :**
+  - [x] Nommer explicitement sur le schéma : `BOOT_BUCK` (`$1N19`), `VSENSE_BUCK` (`$1N106`), `COMP_BUCK` (`$1N107`), `RC_COMP` (`$1N109`), `VBUS_USB` (`$1N23`), `K_LINE` (`$1N55`). *(NetPorts et scission des fils réalisés, 0 net $1N restant dans le schéma)*
+  - [x] Mettre à jour le PCB, synchroniser les pistes et vérifier la cohérence ERC = 0 / DRC = 0. *(Pads et pistes mis à jour, micro-keepouts NO_POURS Top Layer sous C5 et R13_2 pour éliminer les langues de cuivre, synchronisation réussie, DRC = 0, ERC = 0)*
+- [ ] **4.6.2 Relocalisation de R4/R5 (USB-C) & Suppression de 6 à 8 vias :**
+  - [ ] Déplacer `R4` et `R5` au plus près de `J2` (zone `x ≈ 3180-3240, y ≈ -80 à -160`).
+  - [ ] Re-router `USB_CC1` et `USB_CC2` en liaisons directes ultra-courtes (< 200 mil).
+  - [ ] Supprimer les 8 vias existants et les pistes Bottom associées pour libérer le plan de masse central.
+- [ ] **4.6.3 Optimisation du découplage des transceivers :**
+  - [ ] Rapprocher `C3` au plus près de la broche 5 (`VIO`) du transceiver CAN `U2`.
+  - [ ] Rapprocher `C4` au plus près de la broche 3 (`VCC`) du transceiver K-Line `U3`.
+- [ ] **4.6.4 Optimisation de la boucle de commutation Buck :**
+  - [ ] Évaluer le compactage de l'inductance `L1` pour raccourcir le nœud `PH_BUCK` de 843 mil à ~350 mil.
+  - [ ] Re-couler les plans de masse et vérifier DRC = 0. 
 
 ### 4.7 Contrôle Final
 - [ ] **Silkscreen**: rajouter des informations sur le PCB pour délimiter des zones logiques (ie Alimentation). Decouper en sous tache de ce point
