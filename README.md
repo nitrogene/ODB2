@@ -418,19 +418,17 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Reprise immédiate : Optimisation du découplage des transceivers U2/U3 (Sous-tâche 4.6.3)**
+> **Reprise immédiate : Optimisation de la boucle de commutation Buck (Sous-tâche 4.6.4)**
 >
-> 1. **Relocalisation de R4/R5 (USB-C) & Suppression de 6 vias (Sous-tâche 4.6.2) — TERMINÉ & VALIDÉ :**
->    * **Déplacement au plus près de J2 :** `R4` (5.1 kΩ) relocalisée à `(3100, -35)` et `R5` (5.1 kΩ) à `(3100, -145)`.
->    * **Suppression massive de vias et pistes :** Élimination de 23 segments de pistes longs et suppression nette de **6 vias** (passage de 8 vias à 2 vias courts dédiés `VIA_CC1` et `VIA_CC2`).
->    * **Libération du plan de masse central :** Le corridor sous `U2` (CAN) et `U3` (K-Line) ainsi que les anciens emplacements de R4/R5 (`x = 3113, y = -475 / -730`) sont désormais 100% désencombrés pour accueillir les condensateurs de découplage `C3` et `C4`.
->    * **Simplification de VBUS_USB :** Ligne `VBUS_USB` tracée en direct de `J2` (`A4B9`) à `TP1`.
+> 1. **Optimisation du découplage des transceivers U2/U3 (Sous-tâche 4.6.3) — TERMINÉ & VALIDÉ :**
+>    * **Découplage haute performance de U2 (CAN) :** `C3` (100 nF) relocalisé à `(3465, -360, rot 270)` à seulement **1.52 mm (60 mil)** de la broche 5 (`VIO`) de `U2` (contre 318 mil auparavant, réduction de plus de 80%). Topologie directe en piste 20 mil : `Via (3475, -300) -> C3_1 -> U2_5`.
+>    * **Découplage haute performance de U3 (K-Line) :** `C4` (100 nF) relocalisé à `(3345, -920, rot 180)` à seulement **1.71 mm (67.6 mil)** de la broche 3 (`VCC`) de `U3` (contre plus de 350 mil et un saut de couche auparavant). Topologie directe en piste 16 mil : `Via (3375, -950) -> C4_1 -> U3_3`.
+>    * **Nettoyage du rail 3.3V Est :** Remplacement des anciens tracés en escalier par une piste directe en L le long de `x = 3509.8`, libérant entièrement l'espace central et limitant les parasites.
 >    * **Résultat des contrôles :** **DRC PCB = 0 erreur**, **ERC Schématique = 0 erreur**.
 >
-> 2. **Prochaine action à exécuter : 4.6.3 Optimisation du découplage des transceivers :**
->    * Rapprocher `C3` (100 nF) au plus près de la broche 5 (`VIO`) du transceiver CAN `U2`.
->    * Rapprocher `C4` (100 nF) au plus près de la broche 3 (`VCC`) du transceiver K-Line `U3`.
->    * Valider DRC = 0 et ERC = 0.
+> 2. **Prochaine action à exécuter : 4.6.4 Optimisation de la boucle de commutation Buck :**
+>    * Évaluer le compactage de l'inductance `L1` pour raccourcir le nœud `PH_BUCK` de 843 mil à ~350 mil.
+>    * Re-couler les plans de masse et vérifier DRC = 0.
 
 ---
 
@@ -507,15 +505,15 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
   - [x] Déplacer `R4` et `R5` au plus près de `J2` (zone `x ≈ 3100, y ≈ -35 à -145`). *(R4 positionnée à (3100, -35), R5 positionnée à (3100, -145))*
   - [x] Re-router `USB_CC1` et `USB_CC2` en liaisons directes ultra-courtes. *(Liaisons directes optimisées Top/Bottom avec VIA_CC1 à (3060.6, -10) et VIA_CC2 à (3100, -185))*
   - [x] Supprimer les 8 vias existants et les pistes Bottom associées pour libérer le plan de masse central. *(23 segments supprimés, 8 anciens vias supprimés, 2 vias ultra-courts ajoutés, gain net de 6 vias, plan de masse central libéré, DRC = 0)*
-- [ ] **4.6.3 Optimisation du découplage des transceivers :**
-  - [ ] Rapprocher `C3` au plus près de la broche 5 (`VIO`) du transceiver CAN `U2`.
-  - [ ] Rapprocher `C4` au plus près de la broche 3 (`VCC`) du transceiver K-Line `U3`.
+- [x] **4.6.3 Optimisation du découplage des transceivers :**
+  - [x] Rapprocher `C3` au plus près de la broche 5 (`VIO`) du transceiver CAN `U2`. *(C3 relocalisé à (3465, -360, rot 270), distance à U2_5 réduite de 318 mil à 60 mil / 1.52 mm, liaison directe en 20 mil)*
+  - [x] Rapprocher `C4` au plus près de la broche 3 (`VCC`) du transceiver K-Line `U3`. *(C4 relocalisé à (3345, -920, rot 180), distance à U3_3 réduite de >350 mil à 67.6 mil / 1.71 mm, alimentation directe via (3375, -950) -> C4_1 -> U3_3 en 16 mil, rail Est nettoyé, DRC = 0, ERC = 0)*
 - [ ] **4.6.4 Optimisation de la boucle de commutation Buck :**
   - [ ] Évaluer le compactage de l'inductance `L1` pour raccourcir le nœud `PH_BUCK` de 843 mil à ~350 mil.
   - [ ] Re-couler les plans de masse et vérifier DRC = 0. 
 
 ### 4.7 Contrôle Final
-- [ ] **Silkscreen**: rajouter des informations sur le PCB pour délimiter des zones logiques (ie Alimentation). Decouper en sous tache de ce point
+- [ ] **Silkscreen**: rajouter des informations sur le PCB pour délimiter des zones logiques (ie Alimentation). Decouper en sous taches de ce point
 - [ ] **Contrôle DRC final** après optimisations (vérifier qu'aucune reprise n'a cassé un clearance ou un thermal relief).
 - [ ] **Visualisation 3D finale**.
 

@@ -410,3 +410,19 @@ if ($res.result.success -and $res.result.base64) {
   * Lors de la régénération d'un plan de masse (`rebuildCopperRegion()`), le moteur de remplissage peut créer des langues ou pointes de cuivre s'infiltrant dans les fentes étroites entre les pastilles de composants CMS passifs (ex. entre les pads 1 et 2 d'un boîtier 0603 ou 0805), causant des violations d'isolement au mil près (ex. 0.196 mm ou 0.22 mm vs règle `Safe Spacing` >= 0.254 mm).
   * La création d'une micro-zone d'exclusion locale sur la couche cuivre concernée (`eda.pcb_PrimitiveRegion.create(layer, polygon, [7], name)`) avec `ruleType: [EPCB_PrimitiveRegionRuleType.NO_POURS]` (valeur 7) bloque net l'intrusion du plan de masse dans l'intervalle sensible sans impacter les pistes de routage ni les connexions des pastilles voisines, assurant un DRC à 0 erreur d'isolement.
 
+---
+
+## [2026-09-11] Sous-tâche 4.6.3 : Découplage HF des transceivers, signature `pcb_PrimitiveLine.create` et relocalisation de vias
+
+* **Signature exacte de `eda.pcb_PrimitiveLine.create` (CRITIQUE) :**
+  * La signature est `create(net, layer, startX, startY, endX, endY, width, primitiveLock)`. Les coordonnées `startX, startY, endX, endY` précèdent la largeur de piste (`width`). Placer la largeur en 3e position décale tous les arguments et projette la piste hors de la carte ou à des coordonnées erronées.
+* **Relocalisation d'un via (`pcb_PrimitiveVia`) vs modification directe :**
+  * L'appel `via.toAsync().setState_X().setState_Y().done()` sur un via existant met à jour ses coordonnées d'affichage mais ne recalcule pas correctement le masque d'isolement lors de `rebuildCopperRegion()`, laissant subsister une fausse erreur DRC d'isolement (`Copper Region(Filled) to Via`).
+  * Le motif fiable pour déplacer un via consiste à supprimer l'ancien via (`await eda.pcb_PrimitiveVia.delete([oldId])`) puis à instancier un nouveau via (`await eda.pcb_PrimitiveVia.create(net, x, y, hole, diameter, false)`), suivi de `rebuildCopperRegion()`.
+* **Topologie de découplage transceivers (CAN U2 & K-Line U3) :**
+  * Pour un découplage HF efficace (suppression des transitoires di/dt), le condensateur céramique 100 nF (0603) doit être situé à moins de 2 mm de la broche d'alimentation de l'IC.
+  * La topologie de routage optimale est : `Arrivée d'alimentation (Via) -> Pastille 1 Condensateur -> Broche IC`. Cette configuration garantit que le condensateur amortit le bruit haute fréquence avant l'entrée dans le CI tout en éliminant les stubs inductifs.
+  * `C3` (100 nF pour U2 CAN VIO) a été relocalisé à `(3465, -360, rot 270)` à 1.5 mm de la broche 5 de `U2`.
+  * `C4` (100 nF pour U3 K-Line VCC) a été relocalisé à `(3345, -920, rot 180)` à 1.7 mm de la broche 3 de `U3`.
+  * La ligne d'alimentation 3.3V côté Est a été nettoyée en supprimant 4 segments en escalier au profit d'un rail direct en L le long de `x = 3509.8`.
+
