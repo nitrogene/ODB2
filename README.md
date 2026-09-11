@@ -420,8 +420,9 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 > [!IMPORTANT]
 > **Reprise immédiate : Plans de masse (GND) & Vias de couture (Section 4.3)**
 >
-> 1. **Zone d'exclusion RF (Keepout d'antenne méandre) — VALIDÉ :**
->    * La zone `RF_ANTENNA_KEEPOUT` (`EPCB_LayerId.MULTI`, règles `NO_WIRES`, `NO_FILLS`, `NO_POURS`) est en place sur toutes les couches (`x ∈ [3850, 4450], y ∈ [-220, 50]`) avec 0 erreur DRC.
+> 1. **Zone d'exclusion RF (Keepout d'antenne méandre) — ÉTENDU & VALIDÉ :**
+>    * Reroutage de la paire différentielle `USB_D+` et `USB_D-` sous `y = -220` (à `y = -256` et `y = -240`) pour libérer totalement le flanc gauche de l'antenne ESP32.
+>    * Extension de la zone `RF_ANTENNA_KEEPOUT` (`EPCB_LayerId.MULTI`, règles `NO_WIRES`, `NO_FILLS`, `NO_POURS`) sur l'intégralité de la largeur d'antenne (`x ∈ [3680, 4450], y ∈ [-220, 50]`, largeur 770 mil) avec 0 erreur DRC.
 >
 > 2. **Prochaine action à exécuter : Plans de masse (`GND`) & Vias :**
 >    * **Plans de masse (`GND`) :** Couler le plan de cuivre `GND` sur **Top Layer** (Layer 1) et sur **Bottom Layer** (Layer 2) avec remplissage plein (*Solid Fill*), dégagement de 10 mil (0.254 mm) et freins thermiques (*Thermal Relief*). Cela raccordera les 39 pastilles `GND` actuellement en attente.
@@ -477,8 +478,8 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 4.3 Plan de Masse & Gestion RF
 - [x] **Zone d'exclusion d'antenne (Keep-out Zone) :**
   - [x] **Définir le keepout AVANT de couler les plans GND** (sinon reprise manuelle du remplissage après coup).
-  - [x] Définir une zone `Copper Keepout` sur **toutes les couches (All Layers)** sous et autour de l'antenne méandre de l'ESP32 (coin supérieur droit). *(Zone multicouche `RF_ANTENNA_KEEPOUT` x ∈ [3850, 4450], y ∈ [-220, 50] sur couche `EPCB_LayerId.MULTI` avec règles NO_WIRES, NO_FILLS, NO_POURS)*
-  - [x] Garantir l'absence totale de cuivre (aucun plan de masse ni piste) pour préserver les performances radio. *(0 piste, 0 via dans la zone, exclusion stricte validée)*
+  - [x] Définir une zone `Copper Keepout` sur **toutes les couches (All Layers)** sous et autour de l'antenne méandre de l'ESP32 (coin supérieur droit). *(Zone multicouche `RF_ANTENNA_KEEPOUT` x ∈ [3680, 4450], y ∈ [-220, 50] sur couche `EPCB_LayerId.MULTI` avec règles NO_WIRES, NO_FILLS, NO_POURS après reroutage de USB_D+/USB_D- à y < -220)*
+  - [x] Garantir l'absence totale de cuivre (aucun plan de masse ni piste) pour préserver les performances radio. *(0 piste, 0 via dans la zone, exclusion stricte validée sur 770 mil de large)*
 - [ ] **Plans de masse (Copper Area) :**
   - [ ] Plan `GND` sur **Top Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief).
   - [ ] Plan `GND` sur **Bottom Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief).
