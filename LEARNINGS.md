@@ -350,4 +350,21 @@ if ($res.result.success -and $res.result.base64) {
 * **Problème identifié :** L'API `eda.dmt_EditorControl.getCurrentRenderedAreaImage()` capture uniquement le viewport du navigateur (environ 1631 × 618 px). Pour une feuille de schéma complète (format A4), les textes des composants ne mesurent que 3 à 4 pixels. Ré-étirer ce canvas en 2274 × 1236 px ne fait qu'agrandir les pixels sans ajouter de détail vectoriel, rendant le schéma illisible au zoom.
 * **Solution retenue :** L'export d'images haute définition pour la documentation (`images/Schematic.png` et `images/PCB.png`) est confié à l'utilisateur via le menu natif de l'interface EasyEDA Pro (**Fichier > Exporter > Image / PDF** à 300 DPI ou largeur 4096 px), garantissant une netteté vectorielle irréprochable.
 
+---
+
+## [2026-09-11] Création d'une zone d'exclusion / Keepout multicouche (`pcb_PrimitiveRegion`)
+
+* **API :** `eda.pcb_PrimitiveRegion.create(layer, complexPolygon, ruleType, regionName, lineWidth, primitiveLock)`
+* **Couche multicouche (`EPCB_LayerId.MULTI`) :** Pour appliquer une zone d'exclusion sur toutes les couches (Top, Bottom, couches internes), utiliser l'identifiant de couche `12` (`EPCB_LayerId.MULTI`).
+* **Géométrie rectangulaire :** Le polygone rectangulaire est instancié par `eda.pcb_MathPolygon.createPolygon(['R', x, y, width, height, rotation, cornerRadius])` où :
+  * `x` est l'abscisse gauche (min X)
+  * `y` est l'ordonnée supérieure (max Y)
+  * `width` est la largeur (ΔX)
+  * `height` est la hauteur descendante (ΔY)
+* **Combinaison des règles d'exclusion (`ruleType`) :**
+  * `EPCB_PrimitiveRegionRuleType.NO_WIRES` (`5`) : Interdiction formelle de passage de pistes de cuivre.
+  * `EPCB_PrimitiveRegionRuleType.NO_FILLS` (`6`) : Interdiction des remplissages de cuivre (`Solid Fill`).
+  * `EPCB_PrimitiveRegionRuleType.NO_POURS` (`7`) : Interdiction d'incursion des plans de masse ou de puissance (`Copper Pour`).
+  * Spécifier `ruleType: [5, 6, 7]` garantit l'absence totale de tout conducteur sous l'antenne radio (2.4 GHz).
+
 

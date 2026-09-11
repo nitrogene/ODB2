@@ -418,18 +418,15 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 ### 3.1 Prochaine Étape Immédiate
 
 > [!IMPORTANT]
-> **Reprise immédiate : Synchronisation Netlist & Plan de Masse / Gestion RF (Section 4.3)**
+> **Reprise immédiate : Plans de masse (GND) & Vias de couture (Section 4.3)**
 >
-> 1. **Vérification préliminaire de la synchronisation Netlist :**
->    * La Section 4.2 est entièrement terminée, validée et commitée (0 erreur d'isolement / clearance).
->    * Suite à l'ouverture de l'onglet Schéma pour les exports HD, un drapeau *Netlist Error* ("PCB and schematic netlist does not match") est réapparu dans le panneau DRC d'EasyEDA Pro.
->    * **Action à la reprise :** Cliquer sur *Import Changes* dans le panneau DRC ou faire *Conception > Mettre à jour le PCB...* (`Alt + D` puis `U`) pour réconcilier le jeton de synchronisation Schéma/PCB.
+> 1. **Zone d'exclusion RF (Keepout d'antenne méandre) — VALIDÉ :**
+>    * La zone `RF_ANTENNA_KEEPOUT` (`EPCB_LayerId.MULTI`, règles `NO_WIRES`, `NO_FILLS`, `NO_POURS`) est en place sur toutes les couches (`x ∈ [3850, 4450], y ∈ [-220, 50]`) avec 0 erreur DRC.
 >
-> 2. **Démarrage de la Section 4.3 (Plan de Masse & Gestion RF) :**
->    * **Zone d'exclusion RF (Keepout d'antenne) :** Définir la zone `Copper Keepout` (`NO_POURS` / `NO_FILLS`) sur toutes les couches sous l'antenne méandre 2.4 GHz de l'ESP32 (`U1`) dans le coin supérieur droit (`x ∈ [3850, 4450], y ∈ [-220, 50]`).
->    * **Plans de masse (`GND`) :** Couler le plan de cuivre `GND` sur **Top Layer** (Layer 1) et sur **Bottom Layer** (Layer 2) avec remplissage Solid et dégagement thermique (Thermal Relief).
+> 2. **Prochaine action à exécuter : Plans de masse (`GND`) & Vias :**
+>    * **Plans de masse (`GND`) :** Couler le plan de cuivre `GND` sur **Top Layer** (Layer 1) et sur **Bottom Layer** (Layer 2) avec remplissage plein (*Solid Fill*), dégagement de 10 mil (0.254 mm) et freins thermiques (*Thermal Relief*). Cela raccordera les 39 pastilles `GND` actuellement en attente.
 >    * **Vias de couture (Stitching Vias) :** Disposer la matrice de vias sous le pad thermique central de l'ESP32 (`U1_41`), autour de la boucle de découpage buck (`U4`/`D2`/`L1`) et le long du périmètre de la carte pour interconnecter les plans haut et bas.
->    * **Contrôle DRC final :** Valider 0 erreur d'isolement (Clearance), 0 broche non connectée (les 40 broches GND seront résolues par les plans de masse) et 0 erreur de netlist.
+>    * **Contrôle DRC :** Valider 0 erreur d'isolement (Clearance), 0 broche non connectée (résorption des 39 broches GND) et 0 erreur de netlist.
 
 ---
 
@@ -478,10 +475,10 @@ Pour garantir une lisibilité absolue lors de la conception, du débogage et du 
 
 
 ### 4.3 Plan de Masse & Gestion RF
-- [ ] **Zone d'exclusion d'antenne (Keep-out Zone) :**
-  - [ ] **Définir le keepout AVANT de couler les plans GND** (sinon reprise manuelle du remplissage après coup).
-  - [ ] Définir une zone `Copper Keepout` sur **toutes les couches (All Layers)** sous et autour de l'antenne méandre de l'ESP32 (coin supérieur droit).
-  - [ ] Garantir l'absence totale de cuivre (aucun plan de masse ni piste) pour préserver les performances radio.
+- [x] **Zone d'exclusion d'antenne (Keep-out Zone) :**
+  - [x] **Définir le keepout AVANT de couler les plans GND** (sinon reprise manuelle du remplissage après coup).
+  - [x] Définir une zone `Copper Keepout` sur **toutes les couches (All Layers)** sous et autour de l'antenne méandre de l'ESP32 (coin supérieur droit). *(Zone multicouche `RF_ANTENNA_KEEPOUT` x ∈ [3850, 4450], y ∈ [-220, 50] sur couche `EPCB_LayerId.MULTI` avec règles NO_WIRES, NO_FILLS, NO_POURS)*
+  - [x] Garantir l'absence totale de cuivre (aucun plan de masse ni piste) pour préserver les performances radio. *(0 piste, 0 via dans la zone, exclusion stricte validée)*
 - [ ] **Plans de masse (Copper Area) :**
   - [ ] Plan `GND` sur **Top Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief).
   - [ ] Plan `GND` sur **Bottom Layer** (remplissage Solid, dégagement 0.254 mm - 0.3 mm, Thermal Relief).
